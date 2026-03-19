@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DSA C++ Revision — Arrays</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg:         #0a0c10;
+  --surface:    #111318;
+  --surface2:   #181c24;
+  --border:     #1f2633;
+  --border2:    #2a3347;
+  --text:       #dce3f0;
+  --muted:      #6b7a99;
+  --accent:     #3d7aff;
+  --accent2:    #00d4aa;
+  --accent3:    #ff6b6b;
+  --accent4:    #f59e0b;
+  --glow:       rgba(61,122,255,0.15);
+  --glow2:      rgba(0,212,170,0.12);
+  --font-head:  'Syne', sans-serif;
+  --font-body:  'DM Sans', sans-serif;
+  --font-code:  'JetBrains Mono', monospace;
+  --sidebar-w:  260px;
+  --radius:     10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-logo {
+  padding: 28px 22px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo .logo-tag {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--accent2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.sidebar-logo h1 {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+
+.sidebar-logo h1 span {
+  color: var(--accent);
+}
+
+.sidebar-section-label {
+  padding: 18px 22px 8px;
+  font-family: var(--font-code);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-topic {
+  margin: 0 10px 2px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sidebar-topic-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.sidebar-topic-btn:hover {
+  background: var(--surface2);
+  color: #fff;
+}
+
+.sidebar-topic-btn.active {
+  background: rgba(61,122,255,0.12);
+  color: var(--accent);
+}
+
+.sidebar-topic-btn .topic-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-topic-btn .topic-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-family: var(--font-code);
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(61,122,255,0.15);
+  color: var(--accent);
+}
+
+.sidebar-topic-btn.soon .topic-badge {
+  background: rgba(107,122,153,0.15);
+  color: var(--muted);
+}
+
+.sidebar-topic-btn.soon { opacity: 0.5; cursor: not-allowed; }
+
+.sidebar-nav {
+  margin: 6px 10px 2px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 7px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-link::before {
+  content: '';
+  width: 2px; height: 0;
+  background: var(--accent);
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  transition: height 0.2s;
+}
+
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--accent); background: rgba(61,122,255,0.08); }
+.nav-link.active::before { height: 60%; }
+
+.nav-link .dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--border2);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.nav-link.active .dot { background: var(--accent); }
+.nav-link:hover .dot { background: var(--text); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-code);
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  padding: 0 0 80px;
+}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero {
+  position: relative;
+  padding: 70px 60px 56px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(61,122,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: 30%;
+  width: 400px; height: 300px;
+  background: radial-gradient(circle, rgba(0,212,170,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-breadcrumb {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.hero-breadcrumb span { color: var(--accent2); }
+
+.hero h2 {
+  font-family: var(--font-head);
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.hero h2 .hl { color: var(--accent); }
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 560px;
+  margin-bottom: 30px;
+  line-height: 1.65;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-val {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.stat-val.green { color: var(--accent2); }
+.stat-val.blue  { color: var(--accent); }
+.stat-val.red   { color: var(--accent3); }
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-code);
+}
+
+/* ═══════════════════════════════════════════
+   CONTENT WRAPPER
+═══════════════════════════════════════════ */
+.content {
+  padding: 40px 60px;
+  max-width: 960px;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION
+═══════════════════════════════════════════ */
+.section {
+  margin-bottom: 64px;
+  animation: fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.section-icon {
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.icon-blue  { background: rgba(61,122,255,0.12); }
+.icon-green { background: rgba(0,212,170,0.12); }
+.icon-red   { background: rgba(255,107,107,0.12); }
+.icon-amber { background: rgba(245,158,11,0.12); }
+.icon-purple{ background: rgba(168,85,247,0.12); }
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--font-code);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════ */
+.section-divider {
+  width: 100%; height: 1px;
+  background: var(--border);
+  margin: 48px 0;
+  position: relative;
+}
+
+.section-divider::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 60px; height: 1px;
+  background: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  transition: border-color 0.2s, transform 0.2s;
+  position: relative;
+}
+
+.card:hover {
+  border-color: var(--border2);
+  transform: translateY(-1px);
+}
+
+.card.glow-blue:hover { border-color: rgba(61,122,255,0.4); box-shadow: 0 0 24px rgba(61,122,255,0.06); }
+.card.glow-green:hover { border-color: rgba(0,212,170,0.4); box-shadow: 0 0 24px rgba(0,212,170,0.06); }
+.card.glow-red:hover { border-color: rgba(255,107,107,0.4); box-shadow: 0 0 24px rgba(255,107,107,0.06); }
+.card.glow-amber:hover { border-color: rgba(245,158,11,0.4); box-shadow: 0 0 24px rgba(245,158,11,0.06); }
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title .badge {
+  font-family: var(--font-code);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 400;
+}
+
+.badge-blue   { background: rgba(61,122,255,0.15); color: var(--accent); }
+.badge-green  { background: rgba(0,212,170,0.15);  color: var(--accent2); }
+.badge-red    { background: rgba(255,107,107,0.15); color: var(--accent3); }
+.badge-amber  { background: rgba(245,158,11,0.15);  color: var(--accent4); }
+.badge-purple { background: rgba(168,85,247,0.15);  color: #c084fc; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* ═══════════════════════════════════════════
+   COMPLEXITY TABLE
+═══════════════════════════════════════════ */
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+thead {
+  background: var(--surface2);
+}
+
+th {
+  padding: 12px 18px;
+  text-align: left;
+  font-family: var(--font-code);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.tc-good   { color: var(--accent2); font-family: var(--font-code); font-size: 13px; }
+.tc-ok     { color: var(--accent4); font-family: var(--font-code); font-size: 13px; }
+.tc-bad    { color: var(--accent3); font-family: var(--font-code); font-size: 13px; }
+.tc-label  { font-family: var(--font-code); font-size: 12px; color: var(--text); }
+.tc-note   { color: var(--muted); font-size: 12px; }
+
+/* ═══════════════════════════════════════════
+   CODE BLOCK
+═══════════════════════════════════════════ */
+.code-block {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-lang {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--accent2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.code-title {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-family: var(--font-code);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.5px;
+}
+
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.copy-btn.copied { border-color: var(--accent2); color: var(--accent2); }
+
+pre {
+  padding: 20px 20px;
+  overflow-x: auto;
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.75;
+  color: #cdd6f4;
+}
+
+.kw  { color: #89b4fa; }   /* keyword */
+.tp  { color: #89dceb; }   /* type */
+.fn  { color: #a6e3a1; }   /* function */
+.cn  { color: #fab387; }   /* constant / number */
+.cm  { color: #585b70; font-style: italic; }  /* comment */
+.st  { color: #a6e3a1; }   /* string */
+.op  { color: #cba6f7; }   /* operator */
+.id  { color: #cdd6f4; }   /* identifier */
+.pp  { color: #f38ba8; }   /* preprocessor */
+
+/* ═══════════════════════════════════════════
+   PATTERN CARD
+═══════════════════════════════════════════ */
+.pattern-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.pattern-card:hover { border-color: var(--border2); }
+
+.pattern-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.pattern-header:hover { background: rgba(255,255,255,0.02); }
+
+.pattern-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pattern-num {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 3px 9px;
+  border-radius: 4px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.pattern-name {
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.pattern-tags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pattern-toggle {
+  font-size: 18px;
+  color: var(--muted);
+  transition: transform 0.25s;
+}
+
+.pattern-toggle.open { transform: rotate(90deg); }
+
+.pattern-body {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.pattern-body.open { display: block; }
+
+.pattern-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.meta-chip {
+  background: var(--surface2);
+  border-radius: 7px;
+  padding: 10px 14px;
+}
+
+.meta-chip-label {
+  font-family: var(--font-code);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.meta-chip-val {
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.meta-chip-val.green { color: var(--accent2); }
+.meta-chip-val.amber { color: var(--accent4); }
+
+.p-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.65;
+}
+
+/* ═══════════════════════════════════════════
+   TIPS & MISTAKES
+═══════════════════════════════════════════ */
+.tip-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tip-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+
+.tip-list li:hover { border-color: var(--border2); }
+
+.tip-list li .icon {
+  font-size: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.mistake-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mistake-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--text);
+  background: rgba(255,107,107,0.04);
+  border: 1px solid rgba(255,107,107,0.12);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+
+.mistake-list li:hover { border-color: rgba(255,107,107,0.3); }
+.mistake-list li .icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   CHEAT SHEET
+═══════════════════════════════════════════ */
+.cheat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cheat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+
+.cheat-card:hover { border-color: var(--border2); }
+
+.cheat-card-title {
+  font-family: var(--font-code);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cheat-card-title .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+
+.dot-blue   { background: var(--accent); }
+.dot-green  { background: var(--accent2); }
+.dot-amber  { background: var(--accent4); }
+.dot-red    { background: var(--accent3); }
+.dot-purple { background: #c084fc; }
+
+.cheat-items { display: flex; flex-direction: column; gap: 6px; }
+
+.cheat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.cheat-item-key { color: var(--muted); }
+.cheat-item-val { font-family: var(--font-code); font-size: 12px; color: var(--text); }
+.cheat-item-val.green { color: var(--accent2); }
+.cheat-item-val.amber { color: var(--accent4); }
+.cheat-item-val.red   { color: var(--accent3); }
+.cheat-item-val.blue  { color: var(--accent); }
+
+/* ═══════════════════════════════════════════
+   PROBLEMS TABLE
+═══════════════════════════════════════════ */
+.prob-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.prob-table thead { background: var(--surface2); }
+.prob-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-family: var(--font-code);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+
+.prob-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.prob-table tr:last-child td { border-bottom: none; }
+.prob-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.diff-easy   { color: var(--accent2); font-family: var(--font-code); font-size: 11px; }
+.diff-med    { color: var(--accent4); font-family: var(--font-code); font-size: 11px; }
+.diff-hard   { color: var(--accent3); font-family: var(--font-code); font-size: 11px; }
+
+.prob-name { color: #fff; font-weight: 500; }
+.prob-name small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; margin-top: 2px; }
+.prob-tag  { font-family: var(--font-code); font-size: 10px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════
+   CALLOUT
+═══════════════════════════════════════════ */
+.callout {
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+.callout-blue  { background: rgba(61,122,255,0.08);  border: 1px solid rgba(61,122,255,0.2); }
+.callout-green { background: rgba(0,212,170,0.08);   border: 1px solid rgba(0,212,170,0.2); }
+.callout-amber { background: rgba(245,158,11,0.08);  border: 1px solid rgba(245,158,11,0.2); }
+.callout-red   { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2); }
+
+/* ═══════════════════════════════════════════
+   INLINE BADGE / TAG
+═══════════════════════════════════════════ */
+.tag {
+  display: inline-block;
+  font-family: var(--font-code);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+code {
+  font-family: var(--font-code);
+  font-size: 12px;
+  background: var(--surface2);
+  color: var(--accent2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+p { margin-bottom: 12px; color: var(--text); font-size: 14.5px; }
+p:last-child { margin-bottom: 0; }
+
+/* ═══════════════════════════════════════════
+   MOBILE TOGGLE
+═══════════════════════════════════════════ */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  padding: 0 18px;
+  z-index: 200;
+  gap: 14px;
+}
+
+.menu-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 34px; height: 34px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding-top: 52px; }
+  .mobile-topbar { display: flex; }
+  .hero { padding: 36px 24px 30px; }
+  .content { padding: 28px 24px; }
+  .grid-2, .grid-3, .cheat-grid, .pattern-meta { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS BAR (top page indicator)
+═══════════════════════════════════════════ */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  z-index: 999;
+  transition: width 0.1s linear;
+}
+
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- MOBILE TOPBAR -->
+<div class="mobile-topbar">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <span class="topbar-title">DSA <span style="color:var(--accent)">C++</span></span>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar">
+
+  <div class="sidebar-logo">
+    <span class="logo-tag">revision kit v1.0</span>
+    <h1>DSA <span>C++</span><br>Revision</h1>
+  </div>
+
+  <div class="sidebar-section-label">Topics</div>
+
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn active">
+      <span class="topic-icon">📦</span>
+      Arrays
+      <span class="topic-badge">Active</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span class="topic-icon">🔤</span>
+      Strings
+      <span class="topic-badge">Soon</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span class="topic-icon">🔗</span>
+      Linked List
+      <span class="topic-badge">Soon</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span class="topic-icon">🌲</span>
+      Trees
+      <span class="topic-badge">Soon</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span class="topic-icon">🕸️</span>
+      Graphs
+      <span class="topic-badge">Soon</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section-label" style="margin-top:10px">Arrays Sections</div>
+
+  <div class="sidebar-nav">
+    <a class="nav-link active" href="#overview">        <span class="dot"></span>Overview</a>
+    <a class="nav-link" href="#concepts">               <span class="dot"></span>Core Concepts</a>
+    <a class="nav-link" href="#complexity">             <span class="dot"></span>Complexity</a>
+    <a class="nav-link" href="#patterns">               <span class="dot"></span>Patterns</a>
+    <a class="nav-link" href="#stl">                    <span class="dot"></span>STL Toolkit</a>
+    <a class="nav-link" href="#problems">               <span class="dot"></span>Problems</a>
+    <a class="nav-link" href="#interview-tips">         <span class="dot"></span>Interview Tips</a>
+    <a class="nav-link" href="#mistakes">               <span class="dot"></span>Common Mistakes</a>
+    <a class="nav-link" href="#cheatsheet">             <span class="dot"></span>Cheat Sheet</a>
+  </div>
+
+  <div class="sidebar-footer">
+    Built for placement prep · 2025
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     MAIN
+═══════════════════════════════════════ -->
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero" id="overview">
+    <div class="hero-breadcrumb">DSA C++ Revision <span>→</span> Arrays</div>
+    <h2>Arrays — <span class="hl">The Foundation</span></h2>
+    <p class="hero-desc">
+      The most fundamental data structure in DSA. Contiguous memory blocks with
+      O(1) random access. Mastering arrays unlocks 60%+ of interview problems.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-val blue">O(1)</span>
+        <span class="stat-label">Access</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val green">8</span>
+        <span class="stat-label">Patterns</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val red">25+</span>
+        <span class="stat-label">Problems</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" style="color:#c084fc">3</span>
+        <span class="stat-label">Difficulty Levels</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="content">
+
+    <!-- ═══ CORE CONCEPTS ═══ -->
+    <section class="section" id="concepts">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🧠</div>
+        <div>
+          <div class="section-title">Core Concepts</div>
+          <div class="section-subtitle">Foundation you must know cold</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:14px; margin-bottom:16px">
+        <div class="card glow-blue">
+          <div class="card-title">What is an Array?</div>
+          <p>A contiguous block of memory storing elements of the same type. The base address + index gives direct access to any element in O(1) time.</p>
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Declaration</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> arr[<span class="cn">5</span>] = {<span class="cn">1</span>,<span class="cn">2</span>,<span class="cn">3</span>,<span class="cn">4</span>,<span class="cn">5</span>};  <span class="cm">// static</span>
+<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; v = {<span class="cn">1</span>,<span class="cn">2</span>,<span class="cn">3</span>};       <span class="cm">// dynamic</span>
+<span class="tp">int</span>* p = <span class="kw">new</span> <span class="tp">int</span>[<span class="cn">10</span>];          <span class="cm">// heap alloc</span></pre>
+          </div>
+        </div>
+
+        <div class="card glow-green">
+          <div class="card-title">Memory Layout</div>
+          <p>Elements are stored sequentially. <code>arr[i]</code> translates to <code>base_addr + i × sizeof(type)</code>. This makes iteration cache-friendly.</p>
+          <div class="callout callout-green" style="margin-top:12px">
+            <span class="callout-icon">💡</span>
+            <span>Cache locality makes array iteration ~10× faster than linked list traversal on modern CPUs.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Static Array</div>
+          <p style="font-size:13px;color:var(--muted)">Fixed size, stack memory. Use when size is known at compile time.</p>
+          <code>int a[100];</code>
+        </div>
+        <div class="card">
+          <div class="card-title">Dynamic Array</div>
+          <p style="font-size:13px;color:var(--muted)">Heap memory, resizable. <code>vector</code> doubles capacity on overflow — amortized O(1) push.</p>
+          <code>vector&lt;int&gt; v;</code>
+        </div>
+        <div class="card">
+          <div class="card-title">2D Array</div>
+          <p style="font-size:13px;color:var(--muted)">Row-major storage. Access: <code>a[r][c]</code>. Prefer row iteration for cache hits.</p>
+          <code>int a[n][m];</code>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ COMPLEXITY ═══ -->
+    <section class="section" id="complexity">
+      <div class="section-header">
+        <div class="section-icon icon-amber">⏱️</div>
+        <div>
+          <div class="section-title">Time & Space Complexity</div>
+          <div class="section-subtitle">Know these by heart</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Operation</th>
+              <th>Average</th>
+              <th>Worst</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-label">Access <code>arr[i]</code></td>
+              <td class="tc-good">O(1)</td>
+              <td class="tc-good">O(1)</td>
+              <td class="tc-note">Direct address computation</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Search (unsorted)</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-note">Linear scan</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Search (sorted, binary)</td>
+              <td class="tc-good">O(log n)</td>
+              <td class="tc-good">O(log n)</td>
+              <td class="tc-note">Requires sorted array</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Insert at end</td>
+              <td class="tc-good">O(1)</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-note">Amortized O(1) for vector</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Insert at index i</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-note">Shift elements right</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Delete at end</td>
+              <td class="tc-good">O(1)</td>
+              <td class="tc-good">O(1)</td>
+              <td class="tc-note">Just decrement size</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Delete at index i</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-ok">O(n)</td>
+              <td class="tc-note">Shift elements left</td>
+            </tr>
+            <tr>
+              <td class="tc-label">Sorting</td>
+              <td class="tc-ok">O(n log n)</td>
+              <td class="tc-bad">O(n²)</td>
+              <td class="tc-note">Quicksort avg / worst</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-amber" style="margin-top:16px">
+        <span class="callout-icon">⚠️</span>
+        <span>Space complexity is <strong style="color:#fff">O(n)</strong> for storing n elements. Most algorithms use O(1) extra space — always mention this in interviews.</span>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ PATTERNS ═══ -->
+    <section class="section" id="patterns">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔷</div>
+        <div>
+          <div class="section-title">Algorithmic Patterns</div>
+          <div class="section-subtitle">Master these 8 patterns → solve 90% of array problems</div>
+        </div>
+      </div>
+
+      <!-- PATTERN 1: Two Pointer -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">01</span>
+            <span class="pattern-name">Two Pointer</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n)</span>
+            <span class="badge badge-green">O(1) space</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <div class="pattern-meta">
+            <div class="meta-chip">
+              <div class="meta-chip-label">Time</div>
+              <div class="meta-chip-val green">O(n)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Space</div>
+              <div class="meta-chip-val green">O(1)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Requires</div>
+              <div class="meta-chip-val">Sorted / Converging</div>
+            </div>
+          </div>
+          <p class="p-desc">Use two indices that move toward each other (opposite ends) or in the same direction. Eliminates the need for nested loops in many problems.</p>
+          <p class="p-desc"><strong style="color:#fff">When to use:</strong> Pair sum, triplet sum, palindrome check, container with most water, removing duplicates.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Two Sum (Sorted) — Opposite Ends</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="cm">// Find pair summing to target in sorted array</span>
+<span class="tp">bool</span> <span class="fn">twoSum</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; arr, <span class="tp">int</span> target) {
+    <span class="tp">int</span> l = <span class="cn">0</span>, r = arr.<span class="fn">size</span>() - <span class="cn">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="tp">int</span> sum = arr[l] + arr[r];
+        <span class="kw">if</span> (sum == target) <span class="kw">return</span> <span class="kw">true</span>;
+        <span class="kw">else if</span> (sum &lt; target) l++;
+        <span class="kw">else</span> r--;
+    }
+    <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="cm">// Remove duplicates from sorted array — same direction</span>
+<span class="tp">int</span> <span class="fn">removeDuplicates</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; arr) {
+    <span class="kw">if</span> (arr.<span class="fn">empty</span>()) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="tp">int</span> slow = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> fast = <span class="cn">1</span>; fast &lt; arr.<span class="fn">size</span>(); fast++) {
+        <span class="kw">if</span> (arr[fast] != arr[slow])
+            arr[++slow] = arr[fast];
+    }
+    <span class="kw">return</span> slow + <span class="cn">1</span>;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 2: Sliding Window -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">02</span>
+            <span class="pattern-name">Sliding Window</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n)</span>
+            <span class="badge badge-amber">Fixed + Variable</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <div class="pattern-meta">
+            <div class="meta-chip">
+              <div class="meta-chip-label">Time</div>
+              <div class="meta-chip-val green">O(n)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Space</div>
+              <div class="meta-chip-val green">O(1) / O(k)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Type</div>
+              <div class="meta-chip-val amber">Fixed / Variable</div>
+            </div>
+          </div>
+          <p class="p-desc">Maintain a window over the array. Expand right, shrink left based on conditions. Converts O(n²) brute force to O(n).</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Fixed Window — Max Sum of K Elements</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> <span class="fn">maxSumFixed</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> k) {
+    <span class="tp">int</span> n = a.<span class="fn">size</span>(), wsum = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">0</span>; i &lt; k; i++) wsum += a[i]; <span class="cm">// first window</span>
+    <span class="tp">int</span> best = wsum;
+    <span class="kw">for</span> (<span class="tp">int</span> i = k; i &lt; n; i++) {
+        wsum += a[i] - a[i-k];            <span class="cm">// slide</span>
+        best = <span class="fn">max</span>(best, wsum);
+    }
+    <span class="kw">return</span> best;
+}</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Variable Window — Smallest Subarray ≥ S</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> <span class="fn">minLenSubarray</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> s) {
+    <span class="tp">int</span> n = a.<span class="fn">size</span>(), l = <span class="cn">0</span>, sum = <span class="cn">0</span>, res = INT_MAX;
+    <span class="kw">for</span> (<span class="tp">int</span> r = <span class="cn">0</span>; r &lt; n; r++) {
+        sum += a[r];
+        <span class="kw">while</span> (sum &gt;= s) {
+            res = <span class="fn">min</span>(res, r - l + <span class="cn">1</span>);
+            sum -= a[l++];              <span class="cm">// shrink left</span>
+        }
+    }
+    <span class="kw">return</span> (res == INT_MAX) ? <span class="cn">0</span> : res;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 3: Prefix Sum -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">03</span>
+            <span class="pattern-name">Prefix Sum</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-green">Range Queries O(1)</span>
+            <span class="badge badge-blue">Preprocessing O(n)</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <div class="pattern-meta">
+            <div class="meta-chip">
+              <div class="meta-chip-label">Build</div>
+              <div class="meta-chip-val green">O(n)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Query</div>
+              <div class="meta-chip-val green">O(1)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Space</div>
+              <div class="meta-chip-val amber">O(n)</div>
+            </div>
+          </div>
+          <p class="p-desc">Precompute cumulative sums. Range sum [l,r] = <code>pre[r] - pre[l-1]</code>. Also use prefix XOR, product, max/min.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Prefix Sum + Subarray Sum = K (HashMap Trick)</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="cm">// Build prefix</span>
+<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; <span class="fn">buildPrefix</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> n = a.<span class="fn">size</span>();
+    <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; pre(n+<span class="cn">1</span>, <span class="cn">0</span>);
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">0</span>; i &lt; n; i++) pre[i+<span class="cn">1</span>] = pre[i] + a[i];
+    <span class="kw">return</span> pre;
+}
+<span class="cm">// Range query: sum [l, r] (0-indexed)</span>
+<span class="cm">// Answer = pre[r+1] - pre[l]</span>
+
+<span class="cm">// Count subarrays with sum = k</span>
+<span class="tp">int</span> <span class="fn">subarraySum</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> k) {
+    <span class="tp">unordered_map</span>&lt;<span class="tp">int</span>,<span class="tp">int</span>&gt; freq; freq[<span class="cn">0</span>] = <span class="cn">1</span>;
+    <span class="tp">int</span> psum = <span class="cn">0</span>, cnt = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> x : a) {
+        psum += x;
+        cnt += freq[psum - k];  <span class="cm">// key insight!</span>
+        freq[psum]++;
+    }
+    <span class="kw">return</span> cnt;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 4: Kadane's Algorithm -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">04</span>
+            <span class="pattern-name">Kadane's Algorithm</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n)</span>
+            <span class="badge badge-red">Max Subarray</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <div class="pattern-meta">
+            <div class="meta-chip">
+              <div class="meta-chip-label">Time</div>
+              <div class="meta-chip-val green">O(n)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Space</div>
+              <div class="meta-chip-val green">O(1)</div>
+            </div>
+            <div class="meta-chip">
+              <div class="meta-chip-label">Variant</div>
+              <div class="meta-chip-val amber">Circular + Product</div>
+            </div>
+          </div>
+          <p class="p-desc">DP on arrays. If current sum becomes negative, start fresh. Key insight: <code>curMax = max(a[i], curMax + a[i])</code>.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Kadane's — Max Subarray Sum + Subarray Printing</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> <span class="fn">maxSubarray</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> cur = a[<span class="cn">0</span>], best = a[<span class="cn">0</span>];
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">1</span>; i &lt; (<span class="tp">int</span>)a.<span class="fn">size</span>(); i++) {
+        cur = <span class="fn">max</span>(a[i], cur + a[i]);
+        best = <span class="fn">max</span>(best, cur);
+    }
+    <span class="kw">return</span> best;
+}
+
+<span class="cm">// Max circular subarray — Kadane variant</span>
+<span class="tp">int</span> <span class="fn">maxCircular</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> total = <span class="cn">0</span>, maxSum = a[<span class="cn">0</span>], minSum = a[<span class="cn">0</span>];
+    <span class="tp">int</span> curMax = <span class="cn">0</span>, curMin = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> x : a) {
+        curMax = <span class="fn">max</span>(x, curMax + x);  maxSum = <span class="fn">max</span>(maxSum, curMax);
+        curMin = <span class="fn">min</span>(x, curMin + x);  minSum = <span class="fn">min</span>(minSum, curMin);
+        total += x;
+    }
+    <span class="kw">return</span> maxSum > <span class="cn">0</span> ? <span class="fn">max</span>(maxSum, total - minSum) : maxSum;
+}
+
+<span class="cm">// Max product subarray</span>
+<span class="tp">int</span> <span class="fn">maxProduct</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> maxP = a[<span class="cn">0</span>], minP = a[<span class="cn">0</span>], res = a[<span class="cn">0</span>];
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">1</span>; i &lt; (<span class="tp">int</span>)a.<span class="fn">size</span>(); i++) {
+        <span class="kw">if</span> (a[i] &lt; <span class="cn">0</span>) <span class="fn">swap</span>(maxP, minP); <span class="cm">// flip on negative</span>
+        maxP = <span class="fn">max</span>(a[i], maxP * a[i]);
+        minP = <span class="fn">min</span>(a[i], minP * a[i]);
+        res  = <span class="fn">max</span>(res, maxP);
+    }
+    <span class="kw">return</span> res;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 5: Hashing -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">05</span>
+            <span class="pattern-name">Hashing</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-green">O(1) lookup</span>
+            <span class="badge badge-amber">O(n) space</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Use <code>unordered_map</code> / <code>unordered_set</code> to trade space for time. Reduces O(n²) to O(n) in frequency, duplicate, and lookup problems.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Longest Consecutive Sequence — O(n)</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> <span class="fn">longestConsecutive</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; nums) {
+    <span class="tp">unordered_set</span>&lt;<span class="tp">int</span>&gt; st(nums.<span class="fn">begin</span>(), nums.<span class="fn">end</span>());
+    <span class="tp">int</span> best = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> x : st) {
+        <span class="kw">if</span> (!st.<span class="fn">count</span>(x - <span class="cn">1</span>)) { <span class="cm">// sequence start</span>
+            <span class="tp">int</span> len = <span class="cn">1</span>;
+            <span class="kw">while</span> (st.<span class="fn">count</span>(x + len)) len++;
+            best = <span class="fn">max</span>(best, len);
+        }
+    }
+    <span class="kw">return</span> best;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 6: Moore Voting -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">06</span>
+            <span class="pattern-name">Moore's Voting Algorithm</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n)</span>
+            <span class="badge badge-green">O(1) space</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Find majority element (appears > n/2 times) in O(n) time and O(1) space. Cancel out different elements — majority survives.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Majority Element — Boyer-Moore Voting</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">int</span> <span class="fn">majorityElement</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> cand = a[<span class="cn">0</span>], cnt = <span class="cn">1</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">1</span>; i &lt; (<span class="tp">int</span>)a.<span class="fn">size</span>(); i++) {
+        <span class="kw">if</span> (cnt == <span class="cn">0</span>) { cand = a[i]; cnt = <span class="cn">1</span>; }
+        <span class="kw">else if</span> (a[i] == cand) cnt++;
+        <span class="kw">else</span> cnt--;
+    }
+    <span class="cm">// Verify candidate if majority not guaranteed</span>
+    <span class="tp">int</span> freq = <span class="fn">count</span>(a.<span class="fn">begin</span>(), a.<span class="fn">end</span>(), cand);
+    <span class="kw">return</span> (freq > (<span class="tp">int</span>)a.<span class="fn">size</span>()/<span class="cn">2</span>) ? cand : -<span class="cn">1</span>;
+}
+
+<span class="cm">// Majority II: elements appearing > n/3 times (at most 2 candidates)</span>
+<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; <span class="fn">majorityII</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> c1 = <span class="cn">0</span>, c2 = <span class="cn">1</span>, cnt1 = <span class="cn">0</span>, cnt2 = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> x : a) {
+        <span class="kw">if</span> (x == c1) cnt1++;
+        <span class="kw">else if</span> (x == c2) cnt2++;
+        <span class="kw">else if</span> (!cnt1) { c1 = x; cnt1 = <span class="cn">1</span>; }
+        <span class="kw">else if</span> (!cnt2) { c2 = x; cnt2 = <span class="cn">1</span>; }
+        <span class="kw">else</span> { cnt1--; cnt2--; }
+    }
+    <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; res;
+    <span class="kw">if</span> (<span class="fn">count</span>(a.<span class="fn">begin</span>(),a.<span class="fn">end</span>(),c1)>(<span class="tp">int</span>)a.<span class="fn">size</span>()/<span class="cn">3</span>) res.<span class="fn">push_back</span>(c1);
+    <span class="kw">if</span> (<span class="fn">count</span>(a.<span class="fn">begin</span>(),a.<span class="fn">end</span>(),c2)>(<span class="tp">int</span>)a.<span class="fn">size</span>()/<span class="cn">3</span>) res.<span class="fn">push_back</span>(c2);
+    <span class="kw">return</span> res;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 7: Binary Search -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">07</span>
+            <span class="pattern-name">Binary Search on Answer</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n log n)</span>
+            <span class="badge badge-purple">Advanced</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Binary search isn't just for sorted arrays. Search on the <em>answer space</em> when you can define a monotonic predicate. Key: <code>lo=min_ans, hi=max_ans</code>.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Allocate Min Pages — Binary Search on Answer</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="kw">auto</span> <span class="fn">feasible</span> = [&](<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; pages, <span class="tp">int</span> m, <span class="tp">int</span> mid) {
+    <span class="tp">int</span> students = <span class="cn">1</span>, cur = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> p : pages) {
+        <span class="kw">if</span> (p > mid) <span class="kw">return</span> <span class="kw">false</span>;
+        <span class="kw">if</span> (cur + p > mid) { students++; cur = p; }
+        <span class="kw">else</span> cur += p;
+    }
+    <span class="kw">return</span> students &lt;= m;
+};
+
+<span class="tp">int</span> <span class="fn">allocateMinPages</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; pages, <span class="tp">int</span> m) {
+    <span class="tp">int</span> lo = *<span class="fn">max_element</span>(pages.<span class="fn">begin</span>(), pages.<span class="fn">end</span>());
+    <span class="tp">int</span> hi = <span class="fn">accumulate</span>(pages.<span class="fn">begin</span>(), pages.<span class="fn">end</span>(), <span class="cn">0</span>);
+    <span class="tp">int</span> ans = hi;
+    <span class="kw">while</span> (lo &lt;= hi) {
+        <span class="tp">int</span> mid = lo + (hi - lo) / <span class="cn">2</span>;
+        <span class="kw">if</span> (<span class="fn">feasible</span>(pages, m, mid)) { ans = mid; hi = mid - <span class="cn">1</span>; }
+        <span class="kw">else</span> lo = mid + <span class="cn">1</span>;
+    }
+    <span class="kw">return</span> ans;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 8: Dutch National Flag -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">08</span>
+            <span class="pattern-name">Dutch National Flag</span>
+          </div>
+          <div class="pattern-tags">
+            <span class="badge badge-blue">O(n)</span>
+            <span class="badge badge-green">3-way partition</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Partition array into three groups in a single pass using <code>lo, mid, hi</code> pointers. Classic: Sort array of 0s, 1s, 2s.</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Sort Colors (0,1,2) — Single Pass</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">void</span> <span class="fn">sortColors</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a) {
+    <span class="tp">int</span> lo = <span class="cn">0</span>, mid = <span class="cn">0</span>, hi = (<span class="tp">int</span>)a.<span class="fn">size</span>() - <span class="cn">1</span>;
+    <span class="kw">while</span> (mid &lt;= hi) {
+        <span class="kw">if</span> (a[mid] == <span class="cn">0</span>)      <span class="fn">swap</span>(a[lo++], a[mid++]);
+        <span class="kw">else if</span> (a[mid] == <span class="cn">1</span>) mid++;
+        <span class="kw">else</span>                   <span class="fn">swap</span>(a[mid], a[hi--]); <span class="cm">// don't mid++!</span>
+    }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ STL ═══ -->
+    <section class="section" id="stl">
+      <div class="section-header">
+        <div class="section-icon icon-green">⚙️</div>
+        <div>
+          <div class="section-title">STL Toolkit</div>
+          <div class="section-subtitle">Essential functions — use them, don't rewrite them</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card glow-green">
+          <div class="card-title">vector&lt;int&gt; essentials</div>
+          <div class="code-block" style="margin-top: 10px">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Vector Operations</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre>v.<span class="fn">push_back</span>(x);     <span class="cm">// O(1) amortized</span>
+v.<span class="fn">pop_back</span>();        <span class="cm">// O(1)</span>
+v.<span class="fn">size</span>();            <span class="cm">// O(1)</span>
+v.<span class="fn">resize</span>(n, <span class="cn">0</span>);     <span class="cm">// O(n)</span>
+v.<span class="fn">assign</span>(n, val);   <span class="cm">// fill</span>
+v.<span class="fn">insert</span>(it, x);    <span class="cm">// O(n)</span>
+v.<span class="fn">erase</span>(it);        <span class="cm">// O(n)</span>
+v.<span class="fn">clear</span>();           <span class="cm">// O(n)</span>
+v.<span class="fn">empty</span>();           <span class="cm">// O(1)</span>
+v.<span class="fn">front</span>(); v.<span class="fn">back</span>(); <span class="cm">// O(1)</span></pre>
+          </div>
+        </div>
+
+        <div class="card glow-blue">
+          <div class="card-title">&lt;algorithm&gt; for arrays</div>
+          <div class="code-block" style="margin-top: 10px">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Algorithm Functions</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());         <span class="cm">// O(n log n)</span>
+<span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="fn">greater</span>&lt;<span class="tp">int</span>&gt;());
+<span class="fn">reverse</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+<span class="fn">rotate</span>(v.<span class="fn">begin</span>(), v.<span class="fn">begin</span>()+k, v.<span class="fn">end</span>());
+<span class="fn">unique</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());         <span class="cm">// needs sort first</span>
+<span class="fn">lower_bound</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), x); <span class="cm">// O(log n)</span>
+<span class="fn">upper_bound</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), x);
+*<span class="fn">max_element</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+<span class="fn">accumulate</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="cn">0</span>);
+<span class="fn">count</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), val);
+<span class="fn">fill</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="cn">0</span>);
+<span class="fn">next_permutation</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());</pre>
+          </div>
+        </div>
+
+        <div class="card glow-amber">
+          <div class="card-title">unordered_map tricks</div>
+          <div class="code-block" style="margin-top: 10px">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">HashMap</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="tp">unordered_map</span>&lt;<span class="tp">int</span>,<span class="tp">int</span>&gt; mp;
+mp[key]++;              <span class="cm">// auto init to 0</span>
+mp.<span class="fn">count</span>(key);         <span class="cm">// 1 if exists</span>
+mp.<span class="fn">find</span>(key);          <span class="cm">// iterator</span>
+mp.<span class="fn">erase</span>(key);
+<span class="kw">for</span> (<span class="kw">auto</span>&amp; [k,v] : mp)  <span class="cm">// C++17 structured binding</span>
+    cout &lt;&lt; k &lt;&lt; <span class="st">" "</span> &lt;&lt; v;
+
+<span class="cm">// Frequency map from array</span>
+<span class="tp">unordered_map</span>&lt;<span class="tp">int</span>,<span class="tp">int</span>&gt; freq;
+<span class="kw">for</span> (<span class="tp">int</span> x : arr) freq[x]++;</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Useful one-liners</div>
+          <div class="code-block" style="margin-top: 10px">
+            <div class="code-header">
+              <span class="code-lang">C++</span>
+              <span class="code-title">Handy Snippets</span>
+              <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+            </div>
+            <pre><span class="cm">// init vector of size n with 0</span>
+<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; v(n, <span class="cn">0</span>);
+
+<span class="cm">// 2D grid n×m filled with -1</span>
+<span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&gt; dp(n, <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;(m, -<span class="cn">1</span>));
+
+<span class="cm">// Print vector</span>
+<span class="kw">for</span> (<span class="tp">int</span> x : v) cout &lt;&lt; x &lt;&lt; <span class="st">" "</span>;
+
+<span class="cm">// Copy vector</span>
+<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; copy(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+
+<span class="cm">// Dedup sorted vector</span>
+v.<span class="fn">erase</span>(<span class="fn">unique</span>(v.<span class="fn">begin</span>(),v.<span class="fn">end</span>()),v.<span class="fn">end</span>());</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ PROBLEMS ═══ -->
+    <section class="section" id="problems">
+      <div class="section-header">
+        <div class="section-icon icon-red">🎯</div>
+        <div>
+          <div class="section-title">Must-Solve Problems</div>
+          <div class="section-subtitle">Sorted by pattern — solve in this order</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="prob-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Problem</th>
+              <th>Pattern</th>
+              <th>Difficulty</th>
+              <th>Key Idea</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-label">1</td>
+              <td><span class="prob-name">Two Sum<small>LeetCode 1</small></span></td>
+              <td class="prob-tag">Hashing</td>
+              <td class="diff-easy">Easy</td>
+              <td class="tc-note">Store complement in map</td>
+            </tr>
+            <tr>
+              <td class="tc-label">2</td>
+              <td><span class="prob-name">Max Subarray<small>LeetCode 53</small></span></td>
+              <td class="prob-tag">Kadane</td>
+              <td class="diff-easy">Easy</td>
+              <td class="tc-note">Reset if cur &lt; 0</td>
+            </tr>
+            <tr>
+              <td class="tc-label">3</td>
+              <td><span class="prob-name">Best Time to Buy Stock<small>LeetCode 121</small></span></td>
+              <td class="prob-tag">Greedy</td>
+              <td class="diff-easy">Easy</td>
+              <td class="tc-note">Track min so far</td>
+            </tr>
+            <tr>
+              <td class="tc-label">4</td>
+              <td><span class="prob-name">Container With Most Water<small>LeetCode 11</small></span></td>
+              <td class="prob-tag">Two Pointer</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">Move shorter pointer inward</td>
+            </tr>
+            <tr>
+              <td class="tc-label">5</td>
+              <td><span class="prob-name">3Sum<small>LeetCode 15</small></span></td>
+              <td class="prob-tag">Two Pointer</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">Sort + fix one, two-pointer rest</td>
+            </tr>
+            <tr>
+              <td class="tc-label">6</td>
+              <td><span class="prob-name">Subarray Sum = K<small>LeetCode 560</small></span></td>
+              <td class="prob-tag">Prefix Sum</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">pre[r]−pre[l]=k → map freq</td>
+            </tr>
+            <tr>
+              <td class="tc-label">7</td>
+              <td><span class="prob-name">Longest Subarray ≤ K<small>Sliding Window</small></span></td>
+              <td class="prob-tag">Sliding Window</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">Variable window expand/shrink</td>
+            </tr>
+            <tr>
+              <td class="tc-label">8</td>
+              <td><span class="prob-name">Product of Array Except Self<small>LeetCode 238</small></span></td>
+              <td class="prob-tag">Prefix/Suffix</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">Left product × right product</td>
+            </tr>
+            <tr>
+              <td class="tc-label">9</td>
+              <td><span class="prob-name">Find Duplicate Number<small>LeetCode 287</small></span></td>
+              <td class="prob-tag">Floyd's Cycle</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">Array as linked list, detect cycle</td>
+            </tr>
+            <tr>
+              <td class="tc-label">10</td>
+              <td><span class="prob-name">Majority Element II<small>LeetCode 229</small></span></td>
+              <td class="prob-tag">Moore Voting</td>
+              <td class="diff-med">Medium</td>
+              <td class="tc-note">2 candidates, verify at end</td>
+            </tr>
+            <tr>
+              <td class="tc-label">11</td>
+              <td><span class="prob-name">Trapping Rain Water<small>LeetCode 42</small></span></td>
+              <td class="prob-tag">Two Pointer</td>
+              <td class="diff-hard">Hard</td>
+              <td class="tc-note">min(leftMax, rightMax) − h[i]</td>
+            </tr>
+            <tr>
+              <td class="tc-label">12</td>
+              <td><span class="prob-name">Merge K Sorted Arrays<small>Heap</small></span></td>
+              <td class="prob-tag">Priority Queue</td>
+              <td class="diff-hard">Hard</td>
+              <td class="tc-note">Min heap of (val, arr, idx)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ INTERVIEW TIPS ═══ -->
+    <section class="section" id="interview-tips">
+      <div class="section-header">
+        <div class="section-icon icon-green">💼</div>
+        <div>
+          <div class="section-title">Interview Tips</div>
+          <div class="section-subtitle">What interviewers actually look for</div>
+        </div>
+      </div>
+
+      <ul class="tip-list">
+        <li>
+          <span class="icon">🎯</span>
+          <span><strong style="color:#fff">Always clarify constraints first.</strong> Ask: sorted or unsorted? Can values be negative? Duplicate elements allowed? What's the size of n? This shows structured thinking.</span>
+        </li>
+        <li>
+          <span class="icon">🧩</span>
+          <span><strong style="color:#fff">State your brute force first.</strong> Mention O(n²) or O(n³) upfront, then optimize. Shows problem decomposition, and gives a fallback if you get stuck.</span>
+        </li>
+        <li>
+          <span class="icon">📊</span>
+          <span><strong style="color:#fff">Walk through edge cases out loud.</strong> Empty array, single element, all negatives, all same elements, integer overflow with n > 10⁵.</span>
+        </li>
+        <li>
+          <span class="icon">⚡</span>
+          <span><strong style="color:#fff">Recognize the pattern by constraint.</strong> O(n) forced → Two Pointer or Sliding Window. O(1) space → In-place manipulation. Range queries → Prefix Sum. Sorted → Binary Search.</span>
+        </li>
+        <li>
+          <span class="icon">📝</span>
+          <span><strong style="color:#fff">Always mention space complexity.</strong> Especially when using extra arrays or hashmaps. Interviewers often follow up asking for O(1) space solution.</span>
+        </li>
+        <li>
+          <span class="icon">🔄</span>
+          <span><strong style="color:#fff">For Two Pointer, state the invariant.</strong> What does each pointer represent? What condition moves which pointer? This prevents infinite loops and off-by-one errors.</span>
+        </li>
+        <li>
+          <span class="icon">🏁</span>
+          <span><strong style="color:#fff">Dry run on a small example.</strong> Before coding, trace through arr = [2,3,1,5] mentally. This catches bugs before writing code — saves you 10 mins of debugging.</span>
+        </li>
+      </ul>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ COMMON MISTAKES ═══ -->
+    <section class="section" id="mistakes">
+      <div class="section-header">
+        <div class="section-icon icon-red">⚠️</div>
+        <div>
+          <div class="section-title">Common Mistakes</div>
+          <div class="section-subtitle">Every beginner makes these — you won't after today</div>
+        </div>
+      </div>
+
+      <ul class="mistake-list">
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Off-by-one in binary search.</strong> Always use <code>lo + (hi - lo) / 2</code> to avoid overflow. Decide carefully: <code>lo = mid+1</code> vs <code>lo = mid</code>, <code>hi = mid-1</code> vs <code>hi = mid</code>.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Accessing <code>arr[-1]</code> or <code>arr[n]</code>.</strong> Always check bounds before accessing. Use: <code>if (i >= 0 && i < n)</code>. Very common in sliding window and two pointer.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Integer overflow in prefix sum.</strong> When arr values can be up to 10⁹ and n up to 10⁵, use <code>long long</code> for prefix arrays. <code>int</code> max is ~2.1×10⁹.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Forgetting to handle empty array.</strong> Many solutions crash on <code>n = 0</code>. Always add: <code>if (a.empty()) return 0;</code> or <code>if (n == 0) ...</code>.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Using <code>sort()</code> when not needed.</strong> Sorting is O(n log n) and costs precious time. If the problem can be solved in O(n) with hashing or two pointer, avoid sorting.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Not using <code>(int)</code> cast for <code>size()</code>.</strong> <code>vector::size()</code> returns <code>size_t</code> (unsigned). <code>size() - 1</code> on empty vector wraps to a huge number. Cast to <code>int</code>.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Sliding window: not advancing <code>mid++</code> in Dutch Flag.</strong> When swapping with <code>hi</code>, don't increment <code>mid</code> — the swapped element hasn't been evaluated yet.</span>
+        </li>
+        <li>
+          <span class="icon">🚫</span>
+          <span><strong style="color:#fff">Using <code>map</code> instead of <code>unordered_map</code>.</strong> <code>map</code> is O(log n) per operation. <code>unordered_map</code> is O(1) avg. For n = 10⁵, this can be the difference between AC and TLE.</span>
+        </li>
+      </ul>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ CHEAT SHEET ═══ -->
+    <section class="section" id="cheatsheet">
+      <div class="section-header">
+        <div class="section-icon icon-amber">⚡</div>
+        <div>
+          <div class="section-title">Quick Revision Cheat Sheet</div>
+          <div class="section-subtitle">Last-minute review before your interview</div>
+        </div>
+      </div>
+
+      <div class="cheat-grid">
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot dot-blue"></span>Pattern → Use When</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Two Sum / Pair</span><span class="cheat-item-val blue">Hashing or Two Ptr</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Subarray sum</span><span class="cheat-item-val blue">Prefix Sum + Map</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Max/min window</span><span class="cheat-item-val blue">Sliding Window</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Sorted + target</span><span class="cheat-item-val blue">Binary Search</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Majority element</span><span class="cheat-item-val blue">Moore Voting</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Partition 3 types</span><span class="cheat-item-val blue">Dutch National Flag</span></div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot dot-green"></span>Complexity Quick Ref</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Access</span><span class="cheat-item-val green">O(1)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Linear scan</span><span class="cheat-item-val green">O(n)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Binary search</span><span class="cheat-item-val green">O(log n)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Sort</span><span class="cheat-item-val amber">O(n log n)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Brute subarray</span><span class="cheat-item-val red">O(n²)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Prefix build</span><span class="cheat-item-val green">O(n)</span></div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot dot-amber"></span>Edge Cases Checklist</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Empty array</span><span class="cheat-item-val amber">n = 0 → return early</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Single element</span><span class="cheat-item-val amber">n = 1 check</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">All same elements</span><span class="cheat-item-val amber">Dedup logic</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">All negatives</span><span class="cheat-item-val amber">Init = a[0] not 0</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Overflow</span><span class="cheat-item-val amber">Use long long</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">size() - 1</span><span class="cheat-item-val amber">Cast to (int)</span></div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot dot-purple"></span>STL Quick Fire</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Sort descending</span><span class="cheat-item-val">greater&lt;int&gt;()</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Max element</span><span class="cheat-item-val">*max_element(b,e)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Sum of array</span><span class="cheat-item-val">accumulate(b,e,0)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Count occurrences</span><span class="cheat-item-val">count(b,e,val)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">First ≥ x in sorted</span><span class="cheat-item-val">lower_bound</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Rotate left by k</span><span class="cheat-item-val">rotate(b,b+k,e)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue" style="margin-top:20px">
+        <span class="callout-icon">🚀</span>
+        <div>
+          <strong style="color:#fff">Next Topics Coming Soon: </strong>
+          <span>Strings → Linked List → Stack & Queue → Trees → Graphs → DP</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════
+   SIDEBAR TOGGLE (mobile)
+═══════════════════════════════════════════ */
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
+
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+});
+
+document.addEventListener('click', e => {
+  if (window.innerWidth <= 900 && !sidebar.contains(e.target) && e.target !== menuBtn) {
+    sidebar.classList.remove('open');
+  }
+});
+
+/* ═══════════════════════════════════════════
+   PATTERN TOGGLE
+═══════════════════════════════════════════ */
+function togglePattern(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.pattern-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+/* ═══════════════════════════════════════════
+   COPY CODE
+═══════════════════════════════════════════ */
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '⎘ copy';
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVE NAV HIGHLIGHT
+═══════════════════════════════════════════ */
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section, .hero');
+
+function updateActiveNav() {
+  const scrollY = window.scrollY + 100;
+  let current = '';
+
+  sections.forEach(sec => {
+    if (sec.offsetTop <= scrollY) current = sec.id;
+  });
+
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════ */
+const bar = document.getElementById('progress-bar');
+
+function updateProgress() {
+  const doc = document.documentElement;
+  const scrollTop = doc.scrollTop;
+  const scrollHeight = doc.scrollHeight - doc.clientHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  bar.style.width = pct + '%';
+}
+
+window.addEventListener('scroll', () => {
+  updateActiveNav();
+  updateProgress();
+}, { passive: true });
+
+updateActiveNav();
+
+/* ═══════════════════════════════════════════
+   SMOOTH CLOSE SIDEBAR ON LINK CLICK (mobile)
+═══════════════════════════════════════════ */
+navLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 900) {
+      sidebar.classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>
