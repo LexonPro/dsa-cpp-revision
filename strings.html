@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA C++ — Strings Module</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #080c14;
+    --bg-secondary: #0d1321;
+    --bg-card: #111827;
+    --bg-card-hover: #151f30;
+    --bg-code: #0a0f1a;
+    --border: #1e2d45;
+    --border-accent: #1e3a5f;
+    --accent-primary: #38bdf8;
+    --accent-secondary: #818cf8;
+    --accent-green: #34d399;
+    --accent-orange: #fb923c;
+    --accent-red: #f87171;
+    --accent-yellow: #fbbf24;
+    --accent-purple: #c084fc;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --sidebar-w: 280px;
+    --glow-blue: 0 0 20px rgba(56,189,248,0.15);
+    --glow-purple: 0 0 20px rgba(129,140,248,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex; flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: var(--bg-secondary);
+    z-index: 10;
+  }
+
+  .sidebar-brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    margin-bottom: 6px;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .sidebar-badge {
+    display: inline-block;
+    margin-top: 10px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.25);
+    color: var(--accent-primary);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav { padding: 16px 0; flex: 1; }
+
+  .nav-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 16px 24px 6px;
+  }
+
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 24px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    position: relative;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.03);
+    border-left-color: var(--border-accent);
+  }
+
+  .nav-link.active {
+    color: var(--accent-primary);
+    background: rgba(56,189,248,0.06);
+    border-left-color: var(--accent-primary);
+    font-weight: 500;
+  }
+
+  .nav-link .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    min-width: 18px;
+  }
+
+  .nav-link.active .num { color: var(--accent-primary); opacity: 0.7; }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ─── MAIN CONTENT ─── */
+  #main {
+    margin-left: var(--sidebar-w);
+    padding: 60px 64px 100px;
+    max-width: calc(var(--sidebar-w) + 900px);
+    position: relative; z-index: 1;
+  }
+
+  /* ─── PAGE HERO ─── */
+  .page-hero {
+    margin-bottom: 72px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-primary);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .hero-eyebrow::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }
+
+  .hero-title span {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 580px;
+    line-height: 1.8;
+  }
+
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 28px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .tag-blue { background: rgba(56,189,248,0.1); color: var(--accent-primary); border: 1px solid rgba(56,189,248,0.2); }
+  .tag-purple { background: rgba(129,140,248,0.1); color: var(--accent-secondary); border: 1px solid rgba(129,140,248,0.2); }
+  .tag-green { background: rgba(52,211,153,0.1); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.2); }
+  .tag-orange { background: rgba(251,146,60,0.1); color: var(--accent-orange); border: 1px solid rgba(251,146,60,0.2); }
+
+  /* ─── SECTION ─── */
+  .section {
+    margin-bottom: 80px;
+    scroll-margin-top: 32px;
+  }
+
+  .section-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding-top: 8px;
+    min-width: 28px;
+  }
+
+  .section-title-wrap {}
+
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--border-accent);
+    box-shadow: var(--glow-blue);
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .card-title .icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .icon-blue { background: rgba(56,189,248,0.15); }
+  .icon-purple { background: rgba(129,140,248,0.15); }
+  .icon-green { background: rgba(52,211,153,0.15); }
+  .icon-orange { background: rgba(251,146,60,0.15); }
+  .icon-red { background: rgba(248,113,113,0.15); }
+
+  .card p { color: var(--text-secondary); font-size: 14px; line-height: 1.75; }
+  .card p + p { margin-top: 10px; }
+
+  /* ─── GRID ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ─── CODE BLOCK ─── */
+  .code-wrap {
+    margin: 16px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .code-header {
+    background: #0d1726;
+    padding: 10px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .code-dots {
+    display: flex; gap: 6px;
+  }
+
+  .code-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+
+  .copy-btn {
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .copy-btn:hover { background: rgba(56,189,248,0.2); }
+  .copy-btn.copied { color: var(--accent-green); border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); }
+
+  pre {
+    background: var(--bg-code);
+    padding: 22px 24px;
+    overflow-x: auto;
+    margin: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+
+  /* Syntax highlighting */
+  .kw { color: #ff7b72; font-weight: 500; }
+  .ty { color: #79c0ff; }
+  .fn { color: #d2a8ff; }
+  .st { color: #a5d6ff; }
+  .cm { color: #6e7681; font-style: italic; }
+  .nm { color: #79c0ff; }
+  .op { color: #ff7b72; }
+  .hl { background: rgba(56,189,248,0.08); display: block; margin: 0 -24px; padding: 0 24px; }
+
+  /* ─── COLLAPSIBLE ─── */
+  .collapsible {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .collapsible:hover { border-color: var(--border-accent); }
+
+  .collapsible-trigger {
+    width: 100%;
+    background: var(--bg-card);
+    border: none;
+    padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.2s;
+  }
+
+  .collapsible-trigger:hover { background: var(--bg-card-hover); }
+
+  .collapsible-arrow {
+    color: var(--accent-primary);
+    transition: transform 0.3s;
+    font-size: 12px;
+  }
+
+  .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+
+  .collapsible-body {
+    display: none;
+    background: var(--bg-code);
+    border-top: 1px solid var(--border);
+  }
+
+  .collapsible.open .collapsible-body { display: block; }
+
+  .collapsible-body-inner { padding: 24px; }
+
+  /* ─── PATTERN CARDS ─── */
+  .pattern-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .pattern-card:hover { border-color: var(--border-accent); box-shadow: var(--glow-blue); }
+
+  .pattern-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .pattern-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .pattern-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .pattern-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .pattern-body { padding: 24px 28px; }
+
+  .pattern-meta {
+    display: flex; gap: 20px;
+    margin-bottom: 16px;
+  }
+
+  .meta-item { }
+  .meta-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .meta-value { font-size: 13px; color: var(--text-secondary); }
+
+  /* ─── ALGO CARD ─── */
+  .algo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .algo-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .algo-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-blue { background: rgba(56,189,248,0.15); color: var(--accent-primary); border: 1px solid rgba(56,189,248,0.2); }
+  .badge-purple { background: rgba(192,132,252,0.15); color: var(--accent-purple); border: 1px solid rgba(192,132,252,0.2); }
+  .badge-green { background: rgba(52,211,153,0.15); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.2); }
+
+  .algo-complexity {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  /* ─── STL TABLE ─── */
+  .stl-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .stl-table th {
+    background: #0d1726;
+    padding: 12px 20px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stl-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .stl-table tr:last-child td { border-bottom: none; }
+
+  .stl-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+    color: var(--text-primary);
+  }
+
+  .stl-table code {
+    font-size: 12px;
+    color: var(--accent-primary);
+    background: rgba(56,189,248,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ─── PROBLEMS ─── */
+  .difficulty-section { margin-bottom: 32px; }
+
+  .difficulty-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .diff-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .diff-easy { background: var(--accent-green); box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+  .diff-medium { background: var(--accent-yellow); box-shadow: 0 0 8px rgba(251,191,36,0.5); }
+  .diff-hard { background: var(--accent-red); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
+
+  .diff-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .problem-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .problem-item:hover { border-color: var(--border-accent); }
+
+  .problem-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 28px;
+    padding-top: 2px;
+  }
+
+  .problem-content { flex: 1; }
+
+  .problem-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .problem-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+  .problem-tags { display: flex; gap: 6px; margin-top: 10px; }
+
+  .ptag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ─── MISTAKES ─── */
+  .mistake-item {
+    background: rgba(248,113,113,0.05);
+    border: 1px solid rgba(248,113,113,0.15);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    display: flex; gap: 16px;
+    align-items: flex-start;
+  }
+
+  .mistake-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+
+  .mistake-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fca5a5;
+    margin-bottom: 6px;
+  }
+
+  .mistake-desc { font-size: 13px; color: var(--text-secondary); }
+
+  /* ─── EDGE CASES ─── */
+  .edge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .edge-item {
+    background: rgba(251,146,60,0.05);
+    border: 1px solid rgba(251,146,60,0.15);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .edge-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-orange);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .edge-desc { font-size: 13px; color: var(--text-secondary); }
+
+  /* ─── COMPLEXITY ─── */
+  .complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+  }
+
+  .complexity-table th {
+    background: #0d1726;
+    padding: 10px 18px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--accent-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .complexity-table td {
+    padding: 12px 18px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .complexity-table code {
+    font-size: 12px;
+    color: var(--accent-green);
+    background: rgba(52,211,153,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ─── CHEAT SHEET ─── */
+  .cheat-sheet {
+    background: linear-gradient(135deg, rgba(56,189,248,0.05), rgba(129,140,248,0.05));
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 16px;
+    padding: 36px 40px;
+  }
+
+  .cheat-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .cheat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+
+  .cheat-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(56,189,248,0.15);
+  }
+
+  .cheat-list { list-style: none; }
+
+  .cheat-list li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 6px 0;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .cheat-list li::before {
+    content: '›';
+    color: var(--accent-primary);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ─── HIGHLIGHT BOX ─── */
+  .info-box {
+    display: flex; gap: 14px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+
+  .info-box-icon { flex-shrink: 0; font-size: 16px; }
+
+  .info-box p { color: var(--text-secondary); }
+
+  .info-blue { background: rgba(56,189,248,0.06); border-left: 3px solid var(--accent-primary); }
+  .info-green { background: rgba(52,211,153,0.06); border-left: 3px solid var(--accent-green); }
+  .info-yellow { background: rgba(251,191,36,0.06); border-left: 3px solid var(--accent-yellow); }
+  .info-purple { background: rgba(192,132,252,0.06); border-left: 3px solid var(--accent-purple); }
+
+  /* ─── DIVIDER ─── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+
+  /* ─── MEMORY DIAGRAM ─── */
+  .memory-diagram {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+
+  .mem-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .mem-label {
+    color: var(--text-muted);
+    min-width: 90px;
+    font-size: 11px;
+  }
+
+  .mem-cells { display: flex; }
+
+  .mem-cell {
+    width: 42px; height: 38px;
+    border: 1px solid var(--border-accent);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-primary);
+    font-size: 13px;
+    font-weight: 600;
+    border-right: none;
+    background: rgba(56,189,248,0.04);
+  }
+
+  .mem-cell:last-child { border-right: 1px solid var(--border-accent); }
+  .mem-cell.null-cell { color: var(--accent-red); }
+  .mem-cell.special { background: rgba(129,140,248,0.08); color: var(--accent-secondary); }
+
+  .mem-indices { display: flex; margin-top: 4px; }
+  .mem-idx {
+    width: 42px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* ─── PROGRESS INDICATOR ─── */
+  .section-progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .prog-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .prog-dot.active { background: var(--accent-primary); }
+
+  /* ─── KC KEYWORDS ─── */
+  .kw-highlight {
+    color: var(--accent-primary);
+    font-weight: 600;
+  }
+
+  .kw-green { color: var(--accent-green); font-weight: 600; }
+  .kw-orange { color: var(--accent-orange); font-weight: 600; }
+  .kw-purple { color: var(--accent-purple); font-weight: 600; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); }
+    #main { margin-left: 0; padding: 32px 24px; }
+    .grid-2, .grid-3, .cheat-grid, .edge-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 36px; }
+  }
+
+  /* ─── SCROLLBAR MAIN ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">DSA C++ Revision</div>
+    <div class="sidebar-title">Strings<br>Module</div>
+    <span class="sidebar-badge">v2.0</span>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Foundations</div>
+    <a href="#intro" class="nav-link active"><span class="num">01</span> Introduction</a>
+    <a href="#basics" class="nav-link"><span class="num">02</span> Basic Operations</a>
+
+    <div class="nav-section-label">Core Patterns</div>
+    <a href="#patterns" class="nav-link"><span class="num">03</span> String Patterns</a>
+    <a href="#algorithms" class="nav-link"><span class="num">04</span> Important Algorithms</a>
+
+    <div class="nav-section-label">Reference</div>
+    <a href="#stl" class="nav-link"><span class="num">05</span> STL Functions</a>
+    <a href="#problems" class="nav-link"><span class="num">06</span> Interview Problems</a>
+
+    <div class="nav-section-label">Mastery</div>
+    <a href="#mistakes" class="nav-link"><span class="num">07</span> Common Mistakes</a>
+    <a href="#edge" class="nav-link"><span class="num">08</span> Edge Cases</a>
+    <a href="#complexity" class="nav-link"><span class="num">09</span> Time Complexity</a>
+    <a href="#cheatsheet" class="nav-link"><span class="num">10</span> Cheat Sheet</a>
+  </div>
+
+  <div class="sidebar-footer">
+    Press <code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;">Ctrl+D</code> to bookmark
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <div class="hero-eyebrow">Module 02 — Strings in C++</div>
+    <h1 class="hero-title">Master<br><span>Strings</span></h1>
+    <p class="hero-desc">A complete revision system covering everything from memory layout to advanced sliding window patterns. Built for interviews, designed for clarity.</p>
+    <div class="hero-tags">
+      <span class="tag tag-blue">Two Pointer</span>
+      <span class="tag tag-purple">Sliding Window</span>
+      <span class="tag tag-green">Hashing</span>
+      <span class="tag tag-orange">KMP · Z · RK</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       01. INTRODUCTION
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="intro">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Foundations</div>
+        <h2 class="section-title">Introduction to Strings</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon icon-blue">🔤</span> What is a String?</div>
+      <p>A <span class="kw-highlight">string</span> is a sequence of characters stored contiguously in memory. In C++, strings can be represented in two fundamentally different ways — the old C-style approach and the modern C++ <code style="color:var(--accent-primary);background:rgba(56,189,248,0.08);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;">std::string</code> class.</p>
+      <p>Unlike arrays of integers, strings carry the implicit convention that they represent <span class="kw-orange">human-readable text</span>. Every character maps to an <span class="kw-green">ASCII value</span> — a critical insight for hashing and frequency-count problems.</p>
+    </div>
+
+    <div class="info-box info-blue">
+      <span class="info-box-icon">💡</span>
+      <p><strong style="color:var(--accent-primary)">ASCII Insight:</strong> Lowercase letters 'a'–'z' map to ASCII values 97–122. The difference <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">ch - 'a'</code> gives you an index 0–25, which is the foundation of character frequency arrays.</p>
+    </div>
+
+    <!-- Memory Layout -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title"><span class="icon icon-purple">🧠</span> How Strings Are Stored in Memory</div>
+      <p>Memory layout for <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-primary)">"hello"</code>:</p>
+
+      <div class="memory-diagram">
+        <div class="mem-row">
+          <span class="mem-label">C-string</span>
+          <div class="mem-cells">
+            <div class="mem-cell">'h'</div>
+            <div class="mem-cell">'e'</div>
+            <div class="mem-cell">'l'</div>
+            <div class="mem-cell">'l'</div>
+            <div class="mem-cell">'o'</div>
+            <div class="mem-cell null-cell">'\0'</div>
+          </div>
+        </div>
+        <div class="mem-row">
+          <span class="mem-label" style="color:transparent">x</span>
+          <div class="mem-indices">
+            <div class="mem-idx">[0]</div>
+            <div class="mem-idx">[1]</div>
+            <div class="mem-idx">[2]</div>
+            <div class="mem-idx">[3]</div>
+            <div class="mem-idx">[4]</div>
+            <div class="mem-idx null-cell" style="color:var(--accent-red)">[5]</div>
+          </div>
+        </div>
+        <div class="mem-row" style="margin-top:14px;">
+          <span class="mem-label">std::string</span>
+          <div class="mem-cells">
+            <div class="mem-cell special">ptr</div>
+            <div class="mem-cell special">size</div>
+            <div class="mem-cell special">cap</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:11px;margin-left:12px;">→ heap-allocated char array</span>
+        </div>
+      </div>
+      <p style="margin-top:12px;">C-strings require a <span class="kw-highlight">null terminator '\0'</span> — its absence causes undefined behaviour in strlen/strcpy. <code>std::string</code> manages this internally and tracks <span class="kw-green">size</span> and <span class="kw-orange">capacity</span> separately for amortised O(1) appends.</p>
+    </div>
+
+    <!-- C-style vs std::string -->
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card">
+        <div class="card-title"><span class="icon icon-orange">⚠️</span> C-Style Strings</div>
+        <p><code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-orange)">char str[] = "hello";</code></p>
+        <p style="margin-top:10px;">Array of chars, null-terminated. Manual memory management. Functions: <code style="font-family:'JetBrains Mono',monospace;font-size:11px">strlen</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px">strcpy</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px">strcmp</code>. Prone to buffer overflow bugs. Used in competitive programming for speed.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon icon-green">✅</span> C++ std::string</div>
+        <p><code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">string str = "hello";</code></p>
+        <p style="margin-top:10px;">Dynamic, safe, rich API. Automatically handles memory. Supports <code style="font-family:'JetBrains Mono',monospace;font-size:11px">+</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px">==</code>, range-based for, iterators. The <strong>correct choice</strong> for interviews and real code.</p>
+      </div>
+    </div>
+
+    <div class="code-wrap" style="margin-top:20px;">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div>
+        <span class="code-lang">C++ — String Basics</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// C-style string</span>
+<span class="kw">char</span> cstr[] = <span class="st">"hello"</span>;        <span class="cm">// stored as h,e,l,l,o,\0</span>
+<span class="ty">int</span> len = strlen(cstr);       <span class="cm">// O(n) — scans until \0</span>
+
+<span class="cm">// C++ std::string</span>
+<span class="ty">string</span> s = <span class="st">"hello"</span>;
+<span class="ty">string</span> s2(<span class="nm">5</span>, <span class="st">'a'</span>);           <span class="cm">// "aaaaa" — fill constructor</span>
+<span class="ty">string</span> s3 = s.substr(<span class="nm">1</span>, <span class="nm">3</span>); <span class="cm">// "ell"  — O(k) copy</span>
+
+<span class="cm">// Traversal — multiple ways</span>
+<span class="kw">for</span> (<span class="kw">char</span> c : s) cout &lt;&lt; c;   <span class="cm">// range-for</span>
+<span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; s.<span class="fn">size</span>(); i++) cout &lt;&lt; s[i];
+
+<span class="cm">// Conversion</span>
+<span class="ty">string</span> ns = to_string(<span class="nm">42</span>);   <span class="cm">// int → string</span>
+<span class="ty">int</span>    ni = stoi(<span class="st">"42"</span>);      <span class="cm">// string → int</span></code></pre>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       02. BASIC OPERATIONS
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="basics">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Fundamentals</div>
+        <h2 class="section-title">Basic Operations</h2>
+      </div>
+    </div>
+
+    <!-- Traversal -->
+    <div class="collapsible open">
+      <button class="collapsible-trigger" onclick="toggleCollapsible(this)">
+        🔄 Traversal — Iterating over characters
+        <span class="collapsible-arrow">▼</span>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;">Traversal is O(n). Under the hood, <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-primary)">s[i]</code> is a direct memory access via pointer arithmetic — same as arrays. The range-for compiles to iterator-based traversal, equally fast.</p>
+          <div class="code-wrap">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> s = <span class="st">"hello"</span>;
+
+<span class="cm">// Method 1: index-based</span>
+<span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; (<span class="ty">int</span>)s.<span class="fn">size</span>(); i++) {
+    cout &lt;&lt; s[i] &lt;&lt; <span class="st">" "</span>;
+}
+
+<span class="cm">// Method 2: range-based (preferred)</span>
+<span class="kw">for</span> (<span class="kw">char</span> c : s) cout &lt;&lt; c &lt;&lt; <span class="st">" "</span>;
+
+<span class="cm">// Method 3: iterator</span>
+<span class="kw">for</span> (<span class="kw">auto</span> it = s.<span class="fn">begin</span>(); it != s.<span class="fn">end</span>(); it++)
+    cout &lt;&lt; *it;</code></pre>
+          </div>
+          <div class="info-box info-yellow" style="margin-top:12px;">
+            <span class="info-box-icon">⚠️</span>
+            <p>Cast <code style="font-family:'JetBrains Mono',monospace;font-size:12px">s.size()</code> to <code style="font-family:'JetBrains Mono',monospace;font-size:12px">int</code> when comparing with signed integers. <code>size()</code> returns <code>size_t</code> (unsigned) — <code>i &lt; s.size()</code> with a negative <code>i</code> causes wrap-around bugs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input/Output -->
+    <div class="collapsible">
+      <button class="collapsible-trigger" onclick="toggleCollapsible(this)">
+        📥 Input / Output — cin, getline, cin.ignore
+        <span class="collapsible-arrow">▼</span>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;"><code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-primary)">cin >> s</code> reads until whitespace. For multi-word input, use <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">getline</code> — but after reading an integer with cin, the newline stays in the buffer. Always <code>cin.ignore()</code> before getline.</p>
+          <div class="code-wrap">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> s;
+cin &gt;&gt; s;                    <span class="cm">// reads "hello" (stops at space)</span>
+
+<span class="ty">string</span> line;
+<span class="fn">getline</span>(cin, line);          <span class="cm">// reads full line with spaces</span>
+
+<span class="cm">// When mixing cin and getline:</span>
+<span class="ty">int</span> n; cin &gt;&gt; n;
+cin.<span class="fn">ignore</span>();               <span class="cm">// flush newline from buffer</span>
+<span class="fn">getline</span>(cin, line);          <span class="cm">// now safe to read line</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Length -->
+    <div class="collapsible">
+      <button class="collapsible-trigger" onclick="toggleCollapsible(this)">
+        📏 Length — size() vs length() vs strlen()
+        <span class="collapsible-arrow">▼</span>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;"><code>s.size()</code> and <code>s.length()</code> are identical for <code>std::string</code> — both return the stored length in <span class="kw-green">O(1)</span> from an internal field. <code>strlen()</code> for C-strings is O(n) — it scans until '\0'.</p>
+          <div class="code-wrap">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> s = <span class="st">"hello"</span>;
+cout &lt;&lt; s.<span class="fn">size</span>();     <span class="cm">// 5 — O(1)</span>
+cout &lt;&lt; s.<span class="fn">length</span>();   <span class="cm">// 5 — O(1), identical</span>
+
+<span class="kw">char</span> cs[] = <span class="st">"hello"</span>;
+cout &lt;&lt; <span class="fn">strlen</span>(cs);   <span class="cm">// 5 — O(n)! scans each char</span>
+
+<span class="cm">// Empty check</span>
+<span class="kw">if</span> (s.<span class="fn">empty</span>()) { ... }       <span class="cm">// prefer over s.size() == 0</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concatenation -->
+    <div class="collapsible">
+      <button class="collapsible-trigger" onclick="toggleCollapsible(this)">
+        ➕ Concatenation — + vs append vs +=
+        <span class="collapsible-arrow">▼</span>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;">The <code>+</code> operator creates a <span class="kw-highlight">new string</span> each time — O(n). Repeated concatenation in a loop becomes O(n²). Use <code>+=</code> or <code>append()</code> for in-place modification — amortised <span class="kw-green">O(1)</span> per character.</p>
+          <div class="code-wrap">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> a = <span class="st">"hello"</span>, b = <span class="st">" world"</span>;
+
+<span class="ty">string</span> c = a + b;      <span class="cm">// creates NEW string — O(n)</span>
+a += b;                <span class="cm">// in-place — amortised O(1)</span>
+a.<span class="fn">append</span>(b);          <span class="cm">// same as += for strings</span>
+a += <span class="st">'!'</span>;             <span class="cm">// append single char</span>
+
+<span class="cm">// ❌ BAD — O(n²) in a loop</span>
+<span class="ty">string</span> result = <span class="st">""</span>;
+<span class="kw">for</span> (<span class="kw">char</span> c : chars) result = result + c;
+
+<span class="cm">// ✅ GOOD — O(n)</span>
+<span class="ty">string</span> result = <span class="st">""</span>;
+<span class="kw">for</span> (<span class="kw">char</span> c : chars) result += c;</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="collapsible">
+      <button class="collapsible-trigger" onclick="toggleCollapsible(this)">
+        ⚖️ Comparison — ==, <, >, compare()
+        <span class="collapsible-arrow">▼</span>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;">Comparison operators work lexicographically — character by character via ASCII values. <code>==</code> checks length first (short-circuit), then each char. All comparisons are <span class="kw-orange">O(n)</span> in the worst case.</p>
+          <div class="code-wrap">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> a = <span class="st">"apple"</span>, b = <span class="st">"banana"</span>;
+
+<span class="kw">if</span> (a == b) { ... }    <span class="cm">// false  — lexicographic equality</span>
+<span class="kw">if</span> (a &lt; b)  { ... }    <span class="cm">// true   — 'a' &lt; 'b'</span>
+
+<span class="cm">// compare() returns: &lt;0, 0, or &gt;0</span>
+<span class="ty">int</span> r = a.<span class="fn">compare</span>(b);  <span class="cm">// negative → a comes first</span>
+
+<span class="cm">// Sorting strings uses lexicographic order by default</span>
+vector&lt;<span class="ty">string</span>&gt; v = {<span class="st">"cat"</span>, <span class="st">"apple"</span>, <span class="st">"bat"</span>};
+sort(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());  <span class="cm">// apple, bat, cat</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       03. PATTERNS
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="patterns">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Core Techniques</div>
+        <h2 class="section-title">Important String Patterns</h2>
+      </div>
+    </div>
+
+    <!-- TWO POINTER -->
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-icon icon-blue">👆</div>
+        <div>
+          <div class="pattern-title">Two Pointer on Strings</div>
+          <div class="pattern-subtitle">Converging pointers — left from start, right from end</div>
+        </div>
+        <span class="tag tag-green" style="margin-left:auto;">O(n) time · O(1) space</span>
+      </div>
+      <div class="pattern-body">
+        <div class="info-box info-blue">
+          <span class="info-box-icon">🎯</span>
+          <p><strong style="color:var(--text-primary)">When to use:</strong> Any problem where you process characters from both ends simultaneously — palindrome check, reversing, comparing mirrored positions. The key insight: you <span class="kw-highlight">meet in the middle</span> after n/2 iterations.</p>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px;">
+          <div>
+            <p style="font-family:'Syne',sans-serif;font-weight:600;color:var(--text-primary);margin-bottom:12px;font-size:14px;">🔁 Palindrome Check</p>
+            <div class="code-wrap">
+              <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <pre><code><span class="kw">bool</span> <span class="fn">isPalindrome</span>(<span class="ty">string</span>&amp; s) {
+    <span class="ty">int</span> l = <span class="nm">0</span>, r = s.<span class="fn">size</span>() - <span class="nm">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="kw">if</span> (s[l] != s[r])
+            <span class="kw">return</span> <span class="kw">false</span>;
+        l++; r--;
+    }
+    <span class="kw">return</span> <span class="kw">true</span>;
+}
+<span class="cm">// "racecar" → true
+// "hello"   → false</span></code></pre>
+            </div>
+          </div>
+          <div>
+            <p style="font-family:'Syne',sans-serif;font-weight:600;color:var(--text-primary);margin-bottom:12px;font-size:14px;">🔄 Reverse a String</p>
+            <div class="code-wrap">
+              <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <pre><code><span class="kw">void</span> <span class="fn">reverseStr</span>(<span class="ty">string</span>&amp; s) {
+    <span class="ty">int</span> l = <span class="nm">0</span>, r = s.<span class="fn">size</span>() - <span class="nm">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        swap(s[l], s[r]);
+        l++; r--;
+    }
+}
+<span class="cm">// Or simply: reverse(s.begin(), s.end());
+// Both are O(n/2) = O(n)</span></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREQUENCY COUNT -->
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-icon icon-green">📊</div>
+        <div>
+          <div class="pattern-title">Frequency Count (Character Hashing)</div>
+          <div class="pattern-subtitle">26-bucket array indexed by character — the backbone of string problems</div>
+        </div>
+        <span class="tag tag-green" style="margin-left:auto;">O(n) time · O(1) space</span>
+      </div>
+      <div class="pattern-body">
+        <div class="info-box info-green">
+          <span class="info-box-icon">💡</span>
+          <p><strong style="color:var(--accent-green)">Core Insight:</strong> Since there are only 26 lowercase letters (or 128 ASCII chars), a fixed-size array acts as a perfect hash map. <code style="font-family:'JetBrains Mono',monospace;font-size:12px">freq[c - 'a']</code> maps 'a'→0, 'b'→1, … 'z'→25. Building this array is O(n), and querying any char is O(1).</p>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px;">
+          <div>
+            <p style="font-family:'Syne',sans-serif;font-weight:600;color:var(--text-primary);margin-bottom:12px;font-size:14px;">📝 Character Count</p>
+            <div class="code-wrap">
+              <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <pre><code><span class="ty">string</span> s = <span class="st">"hello"</span>;
+<span class="ty">int</span> freq[<span class="nm">26</span>] = {<span class="nm">0</span>};   <span class="cm">// all zeros</span>
+
+<span class="kw">for</span> (<span class="kw">char</span> c : s)
+    freq[c - <span class="st">'a'</span>]++;
+
+<span class="cm">// freq['h'-'a'] = 1
+// freq['l'-'a'] = 2
+// freq['e'-'a'] = 1</span>
+
+<span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; <span class="nm">26</span>; i++)
+    <span class="kw">if</span> (freq[i])
+        cout &lt;&lt; (<span class="kw">char</span>)(<span class="st">'a'</span>+i)
+             &lt;&lt; <span class="st">": "</span> &lt;&lt; freq[i] &lt;&lt; <span class="st">"\n"</span>;</code></pre>
+            </div>
+          </div>
+          <div>
+            <p style="font-family:'Syne',sans-serif;font-weight:600;color:var(--text-primary);margin-bottom:12px;font-size:14px;">🔀 Anagram Detection</p>
+            <div class="code-wrap">
+              <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <pre><code><span class="kw">bool</span> <span class="fn">isAnagram</span>(<span class="ty">string</span>& a, <span class="ty">string</span>& b) {
+    <span class="kw">if</span> (a.<span class="fn">size</span>() != b.<span class="fn">size</span>()) <span class="kw">return</span> <span class="kw">false</span>;
+    <span class="ty">int</span> freq[<span class="nm">26</span>] = {<span class="nm">0</span>};
+    <span class="kw">for</span> (<span class="ty">int</span> i=<span class="nm">0</span>; i&lt;a.<span class="fn">size</span>(); i++) {
+        freq[a[i]-<span class="st">'a'</span>]++;
+        freq[b[i]-<span class="st">'a'</span>]--;
+    }
+    <span class="kw">for</span> (<span class="ty">int</span> x : freq)
+        <span class="kw">if</span> (x != <span class="nm">0</span>) <span class="kw">return</span> <span class="kw">false</span>;
+    <span class="kw">return</span> <span class="kw">true</span>;
+}
+<span class="cm">// "listen" & "silent" → true</span></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDING WINDOW -->
+    <div class="pattern-card" style="border-color:rgba(129,140,248,0.3);">
+      <div class="pattern-header" style="background:rgba(129,140,248,0.04);">
+        <div class="pattern-icon icon-purple">🪟</div>
+        <div>
+          <div class="pattern-title">Sliding Window</div>
+          <div class="pattern-subtitle">Maintain a dynamic window — expand right, shrink left — for substring problems</div>
+        </div>
+        <span class="tag tag-purple" style="margin-left:auto;">O(n) time</span>
+      </div>
+      <div class="pattern-body">
+        <div class="info-box info-purple">
+          <span class="info-box-icon">🎯</span>
+          <p><strong style="color:var(--accent-purple)">Why it works:</strong> Instead of checking all O(n²) substrings, we maintain a window with two pointers. We expand <code>right</code> always, and shrink <code>left</code> only when a constraint is violated. Each element is added and removed at most once — giving <span class="kw-purple">O(n)</span> total.</p>
+        </div>
+
+        <p style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text-primary);margin:18px 0 12px;font-size:16px;">Problem: Longest Substring Without Repeating Characters</p>
+        <div class="code-wrap">
+          <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Sliding Window</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <pre><code><span class="ty">int</span> <span class="fn">lengthOfLongestSubstring</span>(<span class="ty">string</span> s) {
+    unordered_map&lt;<span class="kw">char</span>, <span class="ty">int</span>&gt; lastSeen;  <span class="cm">// char → last index</span>
+    <span class="ty">int</span> left = <span class="nm">0</span>, maxLen = <span class="nm">0</span>;
+
+    <span class="kw">for</span> (<span class="ty">int</span> right = <span class="nm">0</span>; right &lt; s.<span class="fn">size</span>(); right++) {
+        <span class="kw">char</span> c = s[right];
+
+        <span class="cm">// If char seen & is inside our window</span>
+        <span class="kw">if</span> (lastSeen.<span class="fn">count</span>(c) && lastSeen[c] &gt;= left) {
+            left = lastSeen[c] + <span class="nm">1</span>;  <span class="cm">// shrink window</span>
+        }
+
+        lastSeen[c] = right;           <span class="cm">// update position</span>
+        maxLen = max(maxLen, right - left + <span class="nm">1</span>);
+    }
+    <span class="kw">return</span> maxLen;
+}
+<span class="cm">// "abcabcbb" → 3 ("abc")
+// "pwwkew"   → 3 ("wke")</span></code></pre>
+        </div>
+
+        <div style="margin-top:24px;">
+          <p style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text-primary);margin-bottom:12px;font-size:16px;">Problem: Minimum Window Substring (Conceptual)</p>
+          <div class="info-box info-yellow">
+            <span class="info-box-icon">📐</span>
+            <p><strong style="color:var(--accent-yellow)">Strategy:</strong> Build frequency maps for both strings. Expand right until window contains all required chars. Then shrink left while it still satisfies the condition. Track the minimum valid window size throughout. Time: <span class="kw-green">O(n+m)</span>.</p>
+          </div>
+          <div class="code-wrap" style="margin-top:12px;">
+            <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Minimum Window</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><code><span class="ty">string</span> <span class="fn">minWindow</span>(<span class="ty">string</span> s, <span class="ty">string</span> t) {
+    unordered_map&lt;<span class="kw">char</span>,<span class="ty">int</span>&gt; need, have;
+    <span class="kw">for</span> (<span class="kw">char</span> c : t) need[c]++;
+
+    <span class="ty">int</span> formed=<span class="nm">0</span>, required=need.<span class="fn">size</span>();
+    <span class="ty">int</span> l=<span class="nm">0</span>, minLen=INT_MAX, start=<span class="nm">0</span>;
+
+    <span class="kw">for</span> (<span class="ty">int</span> r=<span class="nm">0</span>; r&lt;s.<span class="fn">size</span>(); r++) {
+        have[s[r]]++;
+        <span class="cm">// Check if this char satisfies its need</span>
+        <span class="kw">if</span> (need.<span class="fn">count</span>(s[r]) && have[s[r]]==need[s[r]])
+            formed++;
+
+        <span class="kw">while</span> (formed == required) {  <span class="cm">// valid window</span>
+            <span class="kw">if</span> (r-l+<span class="nm">1</span> &lt; minLen) { minLen=r-l+<span class="nm">1</span>; start=l; }
+            have[s[l]]--;
+            <span class="kw">if</span> (need.<span class="fn">count</span>(s[l]) && have[s[l]]&lt;need[s[l]])
+                formed--;
+            l++;
+        }
+    }
+    <span class="kw">return</span> minLen==INT_MAX ? <span class="st">""</span> : s.<span class="fn">substr</span>(start, minLen);
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       04. ALGORITHMS
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="algorithms">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Advanced</div>
+        <h2 class="section-title">Important Algorithms</h2>
+      </div>
+    </div>
+
+    <!-- KMP -->
+    <div class="algo-card">
+      <div class="algo-title">
+        KMP Algorithm
+        <span class="algo-badge badge-blue">O(n + m)</span>
+      </div>
+      <div class="algo-complexity">Knuth-Morris-Pratt — Failure Function + Pattern Matching</div>
+      <div class="info-box info-blue">
+        <span class="info-box-icon">🧠</span>
+        <p><strong style="color:var(--accent-primary)">Intuition:</strong> Naïve pattern matching retries from scratch on mismatch — O(nm). KMP pre-processes the pattern to build a <span class="kw-highlight">failure function (LPS array)</span> that stores the longest proper prefix which is also a suffix. On mismatch, instead of restarting, we jump to the position the LPS array tells us — avoiding redundant comparisons.</p>
+      </div>
+      <div class="code-wrap" style="margin-top:16px;">
+        <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — KMP</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code><span class="cm">// Step 1: Build LPS (Longest Prefix Suffix) array</span>
+vector&lt;<span class="ty">int</span>&gt; <span class="fn">buildLPS</span>(<span class="ty">string</span>& pat) {
+    <span class="ty">int</span> m = pat.<span class="fn">size</span>();
+    vector&lt;<span class="ty">int</span>&gt; lps(m, <span class="nm">0</span>);
+    <span class="ty">int</span> len = <span class="nm">0</span>, i = <span class="nm">1</span>;
+    <span class="kw">while</span> (i &lt; m) {
+        <span class="kw">if</span> (pat[i] == pat[len]) lps[i++] = ++len;
+        <span class="kw">else if</span> (len) len = lps[len-<span class="nm">1</span>];  <span class="cm">// jump</span>
+        <span class="kw">else</span> lps[i++] = <span class="nm">0</span>;
+    }
+    <span class="kw">return</span> lps;
+}
+
+<span class="cm">// Step 2: Pattern search using LPS</span>
+<span class="kw">void</span> <span class="fn">KMPSearch</span>(<span class="ty">string</span>& txt, <span class="ty">string</span>& pat) {
+    <span class="ty">int</span> n=txt.<span class="fn">size</span>(), m=pat.<span class="fn">size</span>();
+    <span class="kw">auto</span> lps = <span class="fn">buildLPS</span>(pat);
+    <span class="ty">int</span> i=<span class="nm">0</span>, j=<span class="nm">0</span>;
+    <span class="kw">while</span> (i &lt; n) {
+        <span class="kw">if</span> (txt[i]==pat[j]) { i++; j++; }
+        <span class="kw">if</span> (j==m) {
+            cout &lt;&lt; <span class="st">"Found at: "</span> &lt;&lt; i-j &lt;&lt; <span class="st">"\n"</span>;
+            j = lps[j-<span class="nm">1</span>];
+        } <span class="kw">else if</span> (i&lt;n && txt[i]!=pat[j]) {
+            <span class="kw">if</span> (j) j = lps[j-<span class="nm">1</span>];
+            <span class="kw">else</span> i++;
+        }
+    }
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- Rabin-Karp -->
+    <div class="algo-card">
+      <div class="algo-title">
+        Rabin-Karp Algorithm
+        <span class="algo-badge badge-purple">O(n + m) avg</span>
+      </div>
+      <div class="algo-complexity">Rolling Hash — compare hash values before comparing characters</div>
+      <div class="info-box info-purple">
+        <span class="info-box-icon">🎲</span>
+        <p><strong style="color:var(--accent-purple)">Intuition:</strong> Compute a hash for the pattern. Use a <span class="kw-purple">rolling hash</span> to slide over the text — removing the leftmost character and adding the next one in O(1). Only compare characters when hashes match. Worst case O(nm) on hash collisions, but average O(n+m).</p>
+      </div>
+      <div class="code-wrap" style="margin-top:16px;">
+        <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Rabin-Karp</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code><span class="kw">void</span> <span class="fn">rabinKarp</span>(<span class="ty">string</span>& txt, <span class="ty">string</span>& pat) {
+    <span class="kw">const</span> <span class="ty">int</span> BASE=<span class="nm">31</span>, MOD=<span class="nm">1e9</span>+<span class="nm">7</span>;
+    <span class="ty">int</span> n=txt.<span class="fn">size</span>(), m=pat.<span class="fn">size</span>();
+
+    <span class="cm">// Compute pattern hash & first window hash</span>
+    <span class="ty">long long</span> patHash=<span class="nm">0</span>, winHash=<span class="nm">0</span>, power=<span class="nm">1</span>;
+    <span class="kw">for</span> (<span class="ty">int</span> i=<span class="nm">0</span>; i&lt;m; i++) {
+        patHash = (patHash*BASE + pat[i]) % MOD;
+        winHash = (winHash*BASE + txt[i]) % MOD;
+        <span class="kw">if</span> (i) power = power*BASE % MOD;
+    }
+
+    <span class="kw">for</span> (<span class="ty">int</span> i=<span class="nm">0</span>; i&lt;=n-m; i++) {
+        <span class="kw">if</span> (winHash==patHash && txt.<span class="fn">substr</span>(i,m)==pat)
+            cout &lt;&lt; <span class="st">"Match at: "</span> &lt;&lt; i &lt;&lt; <span class="st">"\n"</span>;
+        <span class="kw">if</span> (i &lt; n-m)  <span class="cm">// rolling hash</span>
+            winHash = (winHash - txt[i]*power%MOD + MOD)
+                      *BASE % MOD + txt[i+m];
+    }
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- Z Algorithm -->
+    <div class="algo-card">
+      <div class="algo-title">
+        Z Algorithm
+        <span class="algo-badge badge-green">O(n)</span>
+      </div>
+      <div class="algo-complexity">Z-array — z[i] = length of longest string starting from s[i] which matches a prefix of s</div>
+      <div class="info-box info-green">
+        <span class="info-box-icon">⚡</span>
+        <p><strong style="color:var(--accent-green)">Intuition:</strong> Concatenate pattern + '$' + text. Build the Z-array in O(n). Any position where <code style="font-family:'JetBrains Mono',monospace;font-size:12px">z[i] == len(pattern)</code> is a match. The '$' separator prevents overlap between the pattern and text.</p>
+      </div>
+      <div class="code-wrap" style="margin-top:16px;">
+        <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Z Algorithm</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code>vector&lt;<span class="ty">int</span>&gt; <span class="fn">buildZ</span>(<span class="ty">string</span>& s) {
+    <span class="ty">int</span> n=s.<span class="fn">size</span>(); vector&lt;<span class="ty">int</span>&gt; z(n, <span class="nm">0</span>);
+    z[<span class="nm">0</span>]=n;
+    <span class="ty">int</span> l=<span class="nm">0</span>, r=<span class="nm">0</span>;
+    <span class="kw">for</span> (<span class="ty">int</span> i=<span class="nm">1</span>; i&lt;n; i++) {
+        <span class="kw">if</span> (i&lt;r) z[i]=min(r-i, z[i-l]);
+        <span class="kw">while</span> (i+z[i]&lt;n && s[z[i]]==s[i+z[i]]) z[i]++;
+        <span class="kw">if</span> (i+z[i]>r) { l=i; r=i+z[i]; }
+    }
+    <span class="kw">return</span> z;
+}
+
+<span class="kw">void</span> <span class="fn">zSearch</span>(<span class="ty">string</span>& txt, <span class="ty">string</span>& pat) {
+    <span class="ty">string</span> concat = pat + <span class="st">"$"</span> + txt;
+    <span class="kw">auto</span> z = <span class="fn">buildZ</span>(concat);
+    <span class="kw">for</span> (<span class="ty">int</span> i=pat.<span class="fn">size</span>()+<span class="nm">1</span>; i&lt;concat.<span class="fn">size</span>(); i++)
+        <span class="kw">if</span> (z[i]==(<span class="ty">int</span>)pat.<span class="fn">size</span>())
+            cout &lt;&lt; <span class="st">"Found at: "</span> &lt;&lt; i-pat.<span class="fn">size</span>()-<span class="nm">1</span> &lt;&lt; <span class="st">"\n"</span>;
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       05. STL
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="stl">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Reference</div>
+        <h2 class="section-title">STL String Functions</h2>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <p>The C++ Standard Library provides a rich set of string utilities. Understanding what happens <em>internally</em> helps you reason about time complexity and avoid surprises.</p>
+    </div>
+
+    <table class="stl-table">
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Signature</th>
+          <th>Complexity</th>
+          <th>Internal Behaviour</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>substr()</code></td>
+          <td><code>s.substr(pos, len)</code></td>
+          <td style="color:var(--accent-orange)">O(len)</td>
+          <td>Allocates a <strong>new</strong> string and copies len characters. Expensive in tight loops — avoid inside O(n) iteration.</td>
+        </tr>
+        <tr>
+          <td><code>find()</code></td>
+          <td><code>s.find(pattern)</code></td>
+          <td style="color:var(--accent-red)">O(n·m)</td>
+          <td>Naive search by default. Returns <code>string::npos</code> if not found. Use KMP or Rabin-Karp for repeated searches.</td>
+        </tr>
+        <tr>
+          <td><code>stoi()</code></td>
+          <td><code>stoi(str, &pos)</code></td>
+          <td style="color:var(--accent-green)">O(n)</td>
+          <td>Parses string to int. Optional second arg stores chars consumed. Throws <code>invalid_argument</code> on failure. Use try-catch.</td>
+        </tr>
+        <tr>
+          <td><code>to_string()</code></td>
+          <td><code>to_string(num)</code></td>
+          <td style="color:var(--accent-green)">O(digits)</td>
+          <td>Converts numeric types to string. Equivalent to sprintf internally. Allocates a new string object.</td>
+        </tr>
+        <tr>
+          <td><code>reverse()</code></td>
+          <td><code>reverse(s.begin(), s.end())</code></td>
+          <td style="color:var(--accent-orange)">O(n/2)</td>
+          <td>In-place swap using two pointers under the hood. No extra allocation. Works on any bidirectional iterator.</td>
+        </tr>
+        <tr>
+          <td><code>sort()</code></td>
+          <td><code>sort(s.begin(), s.end())</code></td>
+          <td style="color:var(--accent-orange)">O(n log n)</td>
+          <td>Sorts characters by ASCII value. Quick way to check anagram: sort both strings and compare.</td>
+        </tr>
+        <tr>
+          <td><code>erase()</code></td>
+          <td><code>s.erase(pos, len)</code></td>
+          <td style="color:var(--accent-red)">O(n)</td>
+          <td>Removes characters and shifts remainder. Very expensive in a loop — prefer building a new string.</td>
+        </tr>
+        <tr>
+          <td><code>replace()</code></td>
+          <td><code>s.replace(pos, len, str)</code></td>
+          <td style="color:var(--accent-red)">O(n)</td>
+          <td>Replaces a range with another string. May cause reallocation if new string is larger than capacity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-wrap" style="margin-top:24px;">
+      <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — STL in action</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="ty">string</span> s = <span class="st">"hello world"</span>;
+
+<span class="cm">// substr — extract "world"</span>
+<span class="ty">string</span> w = s.<span class="fn">substr</span>(<span class="nm">6</span>, <span class="nm">5</span>);        <span class="cm">// "world"</span>
+
+<span class="cm">// find — locate "world"</span>
+<span class="ty">int</span> pos = s.<span class="fn">find</span>(<span class="st">"world"</span>);       <span class="cm">// 6</span>
+<span class="kw">if</span> (pos == <span class="ty">string</span>::npos) <span class="cm">// not found</span>
+
+<span class="cm">// stoi — parse "42" → 42</span>
+<span class="ty">int</span> num = stoi(<span class="st">"42"</span>);
+
+<span class="cm">// to_string — 3.14 → "3.14"</span>
+<span class="ty">string</span> pi = to_string(<span class="nm">3.14</span>);
+
+<span class="cm">// reverse in-place</span>
+reverse(s.<span class="fn">begin</span>(), s.<span class="fn">end</span>());     <span class="cm">// "dlrow olleh"</span>
+
+<span class="cm">// Check anagram via sort</span>
+<span class="ty">string</span> a=<span class="st">"listen"</span>, b=<span class="st">"silent"</span>;
+sort(a.<span class="fn">begin</span>(),a.<span class="fn">end</span>());
+sort(b.<span class="fn">begin</span>(),b.<span class="fn">end</span>());
+<span class="kw">bool</span> anagram = (a == b);          <span class="cm">// true</span></code></pre>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       06. PROBLEMS
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="problems">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Interview Focus</div>
+        <h2 class="section-title">Important Problems</h2>
+      </div>
+    </div>
+
+    <!-- EASY -->
+    <div class="difficulty-section">
+      <div class="difficulty-header">
+        <span class="diff-dot diff-easy"></span>
+        <span class="diff-label">Easy</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">Warm-up — must solve without hesitation</span>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">E1</span>
+        <div class="problem-content">
+          <div class="problem-name">Reverse String</div>
+          <div class="problem-desc">Reverse a string in-place. Use two-pointer swap. No extra space needed.</div>
+          <div class="problem-tags">
+            <span class="tag tag-blue ptag">Two Pointer</span>
+            <span class="tag tag-green ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">E2</span>
+        <div class="problem-content">
+          <div class="problem-name">Valid Palindrome</div>
+          <div class="problem-desc">Given a string, considering only alphanumeric characters and ignoring cases, determine if it's a palindrome. Filter non-alphanumeric, convert to lowercase, then two-pointer check.</div>
+          <div class="problem-tags">
+            <span class="tag tag-blue ptag">Two Pointer</span>
+            <span class="tag tag-green ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">E3</span>
+        <div class="problem-content">
+          <div class="problem-name">Valid Anagram</div>
+          <div class="problem-desc">Check if two strings are anagrams. Build frequency array, increment for s, decrement for t, check all zeros.</div>
+          <div class="problem-tags">
+            <span class="tag tag-green ptag">Hashing</span>
+            <span class="tag tag-green ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">E4</span>
+        <div class="problem-content">
+          <div class="problem-name">Reverse Words in a String</div>
+          <div class="problem-desc">Split by spaces, reverse the word array, rejoin. Alternatively, reverse the whole string then reverse each word in-place.</div>
+          <div class="problem-tags">
+            <span class="tag tag-blue ptag">Two Pointer</span>
+            <span class="tag tag-orange ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDIUM -->
+    <div class="difficulty-section">
+      <div class="difficulty-header">
+        <span class="diff-dot diff-medium"></span>
+        <span class="diff-label">Medium</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">Core interview — demonstrates pattern mastery</span>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">M1</span>
+        <div class="problem-content">
+          <div class="problem-name">Longest Substring Without Repeating Characters</div>
+          <div class="problem-desc">Classic sliding window. Use a map to track last-seen index of each character. Expand right; when a repeat is found, jump left past the previous occurrence.</div>
+          <div class="problem-tags">
+            <span class="tag tag-purple ptag">Sliding Window</span>
+            <span class="tag tag-green ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">M2</span>
+        <div class="problem-content">
+          <div class="problem-name">Group Anagrams</div>
+          <div class="problem-desc">For each string, sort its characters to create a canonical key. Group strings with the same sorted key using an unordered_map. Sort-based key: O(n·k·log k). Frequency-count key: O(n·k).</div>
+          <div class="problem-tags">
+            <span class="tag tag-green ptag">Hashing</span>
+            <span class="tag tag-orange ptag">O(n·k·log k)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">M3</span>
+        <div class="problem-content">
+          <div class="problem-name">Longest Palindromic Substring</div>
+          <div class="problem-desc">Expand-around-center approach. For each character (and each pair), expand outward while characters match. O(n²) time, O(1) space. Manacher's algorithm does it in O(n).</div>
+          <div class="problem-tags">
+            <span class="tag tag-blue ptag">Expand Around Center</span>
+            <span class="tag tag-orange ptag">O(n²)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">M4</span>
+        <div class="problem-content">
+          <div class="problem-name">String to Integer (atoi)</div>
+          <div class="problem-desc">Handle: leading whitespace, optional sign, digit characters, overflow. Process left-to-right, clamp to INT_MIN/INT_MAX on overflow.</div>
+          <div class="problem-tags">
+            <span class="tag tag-blue ptag">Parsing</span>
+            <span class="tag tag-green ptag">O(n)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HARD -->
+    <div class="difficulty-section">
+      <div class="difficulty-header">
+        <span class="diff-dot diff-hard"></span>
+        <span class="diff-label">Hard</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">Senior interviews — tests algorithmic depth</span>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">H1</span>
+        <div class="problem-content">
+          <div class="problem-name">Minimum Window Substring</div>
+          <div class="problem-desc">Two sliding window pointers with frequency maps. Track how many unique characters are currently satisfied. Expand right; when all satisfied, try shrinking left. Record minimum valid window.</div>
+          <div class="problem-tags">
+            <span class="tag tag-purple ptag">Sliding Window</span>
+            <span class="tag tag-green ptag">O(n+m)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">H2</span>
+        <div class="problem-content">
+          <div class="problem-name">Regular Expression Matching</div>
+          <div class="problem-desc">Dynamic programming. dp[i][j] = true if s[0..i-1] matches p[0..j-1]. Handle '.' (any char) and '*' (zero or more of preceding). Key transitions involve the '*' cases.</div>
+          <div class="problem-tags">
+            <span class="tag tag-purple ptag">DP</span>
+            <span class="tag tag-orange ptag">O(n·m)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-item">
+        <span class="problem-num">H3</span>
+        <div class="problem-content">
+          <div class="problem-name">Substring with Concatenation of All Words</div>
+          <div class="problem-desc">Sliding window with step size equal to word length. Maintain two hashmaps — expected and current. Slide across all offsets 0..wordLen-1. Time: O(n·wordLen).</div>
+          <div class="problem-tags">
+            <span class="tag tag-purple ptag">Sliding Window</span>
+            <span class="tag tag-green ptag">Hashing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       07. MISTAKES
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="mistakes">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Watch Out</div>
+        <h2 class="section-title">Common Mistakes</h2>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">Index Out of Bounds with s.size()</div>
+        <div class="mistake-desc"><code style="font-family:'JetBrains Mono',monospace;font-size:12px">s.size()</code> returns an <strong>unsigned</strong> type. Comparing <code>i &lt; s.size() - 1</code> when <code>s</code> is empty causes underflow to a huge number, not -1. Always cast: <code>(int)s.size()</code> or use <code>s.empty()</code> guard first.</div>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">Mutating a String During Iteration</div>
+        <div class="mistake-desc">Calling <code>s.erase()</code> or <code>s.insert()</code> inside a loop invalidates iterators and shifts indices. Build a result string separately and return it, or use a two-pointer in-place approach only when safe.</div>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">O(n²) Concatenation in a Loop</div>
+        <div class="mistake-desc">Using <code>result = result + c</code> inside a loop creates a new O(n) string each iteration. Total cost: O(n²). Use <code>result += c</code> for amortised O(1) per append, or use <code>stringstream</code> for complex formatting.</div>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">Using substr() Inside Sliding Window</div>
+        <div class="mistake-desc"><code>s.substr(l, r-l+1)</code> is O(window size). Calling it inside every iteration of a sliding window loop makes the total complexity O(n²). Store the window's start/length; extract only the final answer.</div>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">Not Handling Non-Lowercase Characters</div>
+        <div class="mistake-desc">Using <code>freq[c - 'a']</code> when the string may contain uppercase, digits, or spaces causes negative array indices and undefined behaviour. Always validate the character range or use a 128-element ASCII array.</div>
+      </div>
+    </div>
+
+    <div class="mistake-item">
+      <span class="mistake-icon">❌</span>
+      <div>
+        <div class="mistake-title">Confusing find() return type</div>
+        <div class="mistake-desc"><code>s.find()</code> returns <code>size_t</code> (unsigned). Checking <code>pos == -1</code> will never be true. Always check <code>pos == string::npos</code>. Alternatively, store in <code>int</code> after explicit cast.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       08. EDGE CASES
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="edge">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Robustness</div>
+        <h2 class="section-title">Edge Cases</h2>
+      </div>
+    </div>
+
+    <div class="info-box info-yellow">
+      <span class="info-box-icon">⚠️</span>
+      <p><strong style="color:var(--accent-yellow)">Interview Tip:</strong> After solving the main logic, always run through these edge cases mentally. Interviewers often ask "what if the string is empty?" immediately after you write your solution.</p>
+    </div>
+
+    <div class="edge-grid" style="margin-top:20px;">
+      <div class="edge-item">
+        <div class="edge-title">🟡 Empty String ("")</div>
+        <div class="edge-desc">Most operations should return 0, false, or "". Guard with <code>if (s.empty()) return ...</code>. Two-pointer: <code>l &lt; r</code> fails immediately for empty strings — correct behaviour. Sliding window: loop never executes.</div>
+      </div>
+      <div class="edge-item">
+        <div class="edge-title">🟡 Single Character</div>
+        <div class="edge-desc">A single char is always a palindrome. Frequency count has only one non-zero entry. Sliding window: window of size 1 is always valid. Reverse: no-op. Ensure your algorithm doesn't access s[1] when size is 1.</div>
+      </div>
+      <div class="edge-item">
+        <div class="edge-title">🟡 All Same Characters ("aaaa")</div>
+        <div class="edge-desc">Palindrome check: trivially true. Longest without repeating: length 1. Anagram: any permutation equals the same string. KMP failure function will have predictable values. Frequency map: one key with count n.</div>
+      </div>
+      <div class="edge-item">
+        <div class="edge-title">🟡 Spaces and Special Characters</div>
+        <div class="edge-desc">Valid palindrome with spaces: filter first. Frequency count: use 128-size ASCII array. getline vs cin: spaces end cin-read strings. Ensure your char arithmetic handles non-alphabetic chars safely.</div>
+      </div>
+      <div class="edge-item">
+        <div class="edge-title">🟡 Very Large Input (n = 10⁵–10⁶)</div>
+        <div class="edge-desc">O(n²) approaches will TLE. Never use nested loops without careful analysis. Avoid repeated substr() calls. Use reserve() for string building: <code>result.reserve(n)</code> prevents repeated reallocations.</div>
+      </div>
+      <div class="edge-item">
+        <div class="edge-title">🟡 Mixed Case ("Hello")</div>
+        <div class="edge-desc">Anagram checks must normalise case. Use <code>tolower(c)</code> during traversal. "Hello" and "hello" are NOT anagrams of each other unless case-insensitive. Palindrome problems often say "ignore case".</div>
+      </div>
+    </div>
+
+    <div class="code-wrap" style="margin-top:24px;">
+      <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Edge Case Guards</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Always add these guards at the top of string functions</span>
+<span class="kw">if</span> (s.<span class="fn">empty</span>()) <span class="kw">return</span> <span class="nm">0</span>;         <span class="cm">// or "", or false</span>
+<span class="kw">if</span> (s.<span class="fn">size</span>() == <span class="nm">1</span>) <span class="kw">return</span> <span class="kw">true</span>;   <span class="cm">// single char is palindrome</span>
+
+<span class="cm">// Normalise case before processing</span>
+<span class="ty">string</span> norm;
+<span class="kw">for</span> (<span class="kw">char</span> c : s)
+    <span class="kw">if</span> (isalnum(c)) norm += tolower(c);
+
+<span class="cm">// Safe char-to-index with bounds check</span>
+<span class="kw">auto</span> idx = [](char c) { return c - <span class="st">'a'</span>; };  <span class="cm">// only for lowercase</span>
+<span class="kw">auto</span> idxASCII = [](char c) { return (<span class="ty">int</span>)c; }; <span class="cm">// for all chars</span></code></pre>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       09. COMPLEXITY
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="complexity">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Analysis</div>
+        <h2 class="section-title">Time Complexity Insights</h2>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title"><span class="icon icon-blue">⏱️</span> Why String Operations Are Often O(n)</div>
+      <p>Unlike arrays of integers, string operations inherently depend on the <span class="kw-highlight">length of the string</span>. Even "simple" operations like equality check, hashing, and copying require touching every character. This is because strings are variable-length data — the CPU cannot know the result without reading all n bytes.</p>
+    </div>
+
+    <table class="complexity-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Complexity</th>
+          <th>Reason / Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>s[i] — random access</td>
+          <td><code>O(1)</code></td>
+          <td>Direct pointer arithmetic, like arrays</td>
+        </tr>
+        <tr>
+          <td>s.size() / s.length()</td>
+          <td><code>O(1)</code></td>
+          <td>Stored as a field — doesn't scan the string</td>
+        </tr>
+        <tr>
+          <td>s += c (single char)</td>
+          <td><code>O(1) amortised</code></td>
+          <td>Doubling strategy; occasional O(n) realloc</td>
+        </tr>
+        <tr>
+          <td>s + t (string concat)</td>
+          <td><code>O(n + m)</code></td>
+          <td>Creates new string, copies both</td>
+        </tr>
+        <tr>
+          <td>s == t (equality)</td>
+          <td><code>O(n)</code></td>
+          <td>Compares char-by-char after length check</td>
+        </tr>
+        <tr>
+          <td>s.find(pattern)</td>
+          <td><code>O(n·m)</code></td>
+          <td>Naïve — use KMP or Z for O(n+m)</td>
+        </tr>
+        <tr>
+          <td>s.substr(pos, len)</td>
+          <td><code>O(len)</code></td>
+          <td>Allocates and copies len characters</td>
+        </tr>
+        <tr>
+          <td>reverse(begin, end)</td>
+          <td><code>O(n/2)</code></td>
+          <td>n/2 swaps — still O(n) asymptotically</td>
+        </tr>
+        <tr>
+          <td>sort(begin, end)</td>
+          <td><code>O(n log n)</code></td>
+          <td>std::sort — introsort (quicksort + heapsort)</td>
+        </tr>
+        <tr>
+          <td>Sliding window</td>
+          <td><code>O(n)</code></td>
+          <td>Each char added/removed at most once</td>
+        </tr>
+        <tr>
+          <td>Nested loop on string</td>
+          <td><code>O(n²)</code></td>
+          <td>Every pair of positions — avoid when possible</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-2" style="margin-top:24px;">
+      <div class="info-box info-yellow" style="margin:0;">
+        <span class="info-box-icon">⚠️</span>
+        <p><strong style="color:var(--accent-yellow)">O(n²) Danger Zone:</strong> Substring extraction inside a loop, naive pattern matching, nested comparisons. Look for these patterns in your code and replace with sliding window or hashing.</p>
+      </div>
+      <div class="info-box info-green" style="margin:0;">
+        <span class="info-box-icon">✅</span>
+        <p><strong style="color:var(--accent-green)">O(n) Techniques:</strong> Sliding window, frequency arrays, two-pointer, KMP/Z for matching. These are the gold standard for competitive programming and interviews.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ═══════════════════════════════════════════
+       10. CHEAT SHEET
+  ═══════════════════════════════════════════ -->
+  <section class="section" id="cheatsheet">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <div class="section-title-wrap">
+        <div class="section-tag">Quick Reference</div>
+        <h2 class="section-title">Quick Revision Cheat Sheet</h2>
+      </div>
+    </div>
+
+    <div class="cheat-sheet">
+      <div class="cheat-title">🗂️ Strings — Complete Reference</div>
+
+      <div class="cheat-grid">
+        <div>
+          <div class="cheat-section-title">Core Patterns</div>
+          <ul class="cheat-list">
+            <li>Two Pointer: converge from both ends — palindrome, reverse</li>
+            <li>Freq Array: <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">freq[c-'a']++</code> — O(1) lookup per char</li>
+            <li>Sliding Window: expand right, shrink left on violation</li>
+            <li>Sort-based key: anagram grouping, canonical form</li>
+            <li>Rolling Hash: Rabin-Karp for O(n) average matching</li>
+            <li>KMP LPS: skip redundant comparisons on mismatch</li>
+            <li>Z-Array: longest prefix matching at each position</li>
+          </ul>
+
+          <div class="cheat-section-title" style="margin-top:24px;">Key Code Snippets</div>
+          <ul class="cheat-list">
+            <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">reverse(s.begin(), s.end())</code> — in-place O(n)</li>
+            <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">sort(s.begin(), s.end())</code> — anagram key</li>
+            <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">s.find(p) != string::npos</code> — check existence</li>
+            <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">tolower(c), isalnum(c)</code> — normalisation</li>
+            <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary)">stoi(s), to_string(n)</code> — type conversion</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="cheat-section-title">Complexity Quick-Look</div>
+          <ul class="cheat-list">
+            <li>Access s[i] → <span class="kw-green">O(1)</span></li>
+            <li>s.size() → <span class="kw-green">O(1)</span></li>
+            <li>s += c → <span class="kw-green">O(1) amort.</span></li>
+            <li>s + t → <span class="kw-orange">O(n+m)</span></li>
+            <li>s.find(p) → <span class="kw-highlight">O(n·m)</span> naive</li>
+            <li>KMP / Z → <span class="kw-green">O(n+m)</span></li>
+            <li>Sliding Window → <span class="kw-green">O(n)</span></li>
+            <li>sort string → <span class="kw-orange">O(n log n)</span></li>
+          </ul>
+
+          <div class="cheat-section-title" style="margin-top:24px;">Edge Cases Checklist</div>
+          <ul class="cheat-list">
+            <li>☐ Empty string — return base case</li>
+            <li>☐ Single character — trivially valid</li>
+            <li>☐ All same chars — verify loop behaviour</li>
+            <li>☐ Mixed case — normalise with tolower()</li>
+            <li>☐ Spaces / special chars — isalnum() guard</li>
+            <li>☐ s.size() unsigned — cast before subtraction</li>
+            <li>☐ find() → check against string::npos</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top:28px; padding-top:24px; border-top:1px solid rgba(56,189,248,0.12);">
+        <div class="cheat-section-title">When To Use Which Pattern</div>
+        <div class="grid-3" style="margin-top:12px; gap:12px;">
+          <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:8px;padding:14px 16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-primary);margin-bottom:8px;font-weight:600;">TWO POINTER</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Palindrome, Reverse, Compare from ends, Remove duplicates in-place</div>
+          </div>
+          <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:8px;padding:14px 16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-green);margin-bottom:8px;font-weight:600;">FREQ ARRAY</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Anagram, Character count, Find first unique, Check all chars present</div>
+          </div>
+          <div style="background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.15);border-radius:8px;padding:14px 16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-secondary);margin-bottom:8px;font-weight:600;">SLIDING WINDOW</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Longest/shortest substring with K distinct, Min window, No-repeat substring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Code Pad -->
+    <div class="code-wrap" style="margin-top:32px;">
+      <div class="code-header"><div class="code-dots"><span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span></div><span class="code-lang">C++ — Template Starter</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// ═══════════════════════════════════════════
+// String Problem Starter Template
+// ═══════════════════════════════════════════</span>
+<span class="kw">#include</span> &lt;bits/stdc++.h&gt;
+<span class="kw">using namespace</span> std;
+
+<span class="kw">void</span> <span class="fn">solve</span>(<span class="ty">string</span>& s) {
+    <span class="ty">int</span> n = s.<span class="fn">size</span>();
+    <span class="kw">if</span> (n == <span class="nm">0</span>) <span class="kw">return</span>;        <span class="cm">// ① empty guard</span>
+
+    <span class="cm">// ② Frequency array (lowercase only)</span>
+    <span class="ty">int</span> freq[<span class="nm">26</span>] = {<span class="nm">0</span>};
+    <span class="kw">for</span> (<span class="kw">char</span> c : s) freq[c-<span class="st">'a'</span>]++;
+
+    <span class="cm">// ③ Two pointer skeleton</span>
+    <span class="ty">int</span> l = <span class="nm">0</span>, r = n - <span class="nm">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="cm">// process s[l] and s[r]</span>
+        l++; r--;
+    }
+
+    <span class="cm">// ④ Sliding window skeleton</span>
+    unordered_map&lt;<span class="kw">char</span>,<span class="ty">int</span>&gt; win;
+    <span class="ty">int</span> left = <span class="nm">0</span>, best = <span class="nm">0</span>;
+    <span class="kw">for</span> (<span class="ty">int</span> right = <span class="nm">0</span>; right &lt; n; right++) {
+        win[s[right]]++;
+        <span class="kw">while</span> (<span class="cm">/* constraint violated */</span> <span class="kw">false</span>) {
+            win[s[left]]--;
+            <span class="kw">if</span> (!win[s[left]]) win.<span class="fn">erase</span>(s[left]);
+            left++;
+        }
+        best = max(best, right - left + <span class="nm">1</span>);
+    }
+}
+
+<span class="ty">int</span> <span class="fn">main</span>() {
+    ios_base::sync_with_stdio(<span class="kw">false</span>);
+    cin.<span class="fn">tie</span>(<span class="kw">NULL</span>);
+    <span class="ty">string</span> s; cin &gt;&gt; s;
+    <span class="fn">solve</span>(s);
+    <span class="kw">return</span> <span class="nm">0</span>;
+}</code></pre>
+    </div>
+
+    <div style="text-align:center;padding:48px 0 24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:2px;">── END OF MODULE 02 ──</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;color:var(--text-muted);margin-top:10px;">DSA C++ Revision · Strings</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ─── SIDEBAR ACTIVE HIGHLIGHT ───
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.2, rootMargin: '-80px 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ─── COLLAPSIBLE ───
+  function toggleCollapsible(btn) {
+    const parent = btn.closest('.collapsible');
+    parent.classList.toggle('open');
+  }
+
+  // ─── COPY CODE ───
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+
+  // ─── SMOOTH SECTION ENTRY ANIMATION ───
+  const cards = document.querySelectorAll('.card, .pattern-card, .algo-card, .problem-item, .mistake-item, .edge-item');
+  const cardObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        cardObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  cards.forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(18px)';
+    card.style.transition = `opacity 0.45s ease ${i * 0.03}s, transform 0.45s ease ${i * 0.03}s`;
+    cardObserver.observe(card);
+  });
+</script>
+</body>
+</html>
