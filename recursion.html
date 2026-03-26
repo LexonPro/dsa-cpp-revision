@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recursion — DSA C++ Revision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:         #0a0c10;
+  --surface:    #111318;
+  --surface2:   #181c24;
+  --border:     #1f2633;
+  --border2:    #2a3347;
+  --text:       #dce3f0;
+  --muted:      #6b7a99;
+  --accent:     #a855f7;
+  --accent2:    #00d4aa;
+  --accent3:    #ff6b6b;
+  --accent4:    #f59e0b;
+  --accent5:    #3d7aff;
+  --font-head:  'Syne', sans-serif;
+  --font-body:  'DM Sans', sans-serif;
+  --font-code:  'JetBrains Mono', monospace;
+  --sidebar-w:  260px;
+  --radius:     10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto;overflow-x:hidden}
+.sidebar-logo{padding:28px 22px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo .logo-tag{font-family:var(--font-code);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:block}
+.sidebar-logo h1{font-family:var(--font-head);font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.3}
+.sidebar-logo h1 span{color:var(--accent)}
+.sidebar-section-label{padding:18px 22px 8px;font-family:var(--font-code);font-size:9px;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase}
+.sidebar-topic{margin:0 10px 2px;border-radius:8px;overflow:hidden}
+.sidebar-topic-btn{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:13.5px;font-weight:500;border-radius:8px;transition:all .2s;text-align:left;text-decoration:none}
+.sidebar-topic-btn:hover{background:var(--surface2);color:#fff}
+.sidebar-topic-btn.active{background:rgba(168,85,247,0.12);color:var(--accent)}
+.topic-badge{margin-left:auto;font-size:9px;font-family:var(--font-code);padding:2px 7px;border-radius:20px;background:rgba(168,85,247,0.15);color:var(--accent)}
+.topic-badge.green{background:rgba(0,212,170,0.15);color:var(--accent2)}
+.topic-badge.blue{background:rgba(61,122,255,0.15);color:var(--accent5)}
+.sidebar-topic-btn.soon{opacity:.5;cursor:not-allowed}
+.sidebar-nav{margin:6px 10px 2px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 12px;color:var(--muted);text-decoration:none;font-size:13px;border-radius:7px;transition:all .2s;position:relative}
+.nav-link::before{content:'';width:2px;height:0;background:var(--accent);position:absolute;left:0;top:50%;transform:translateY(-50%);border-radius:1px;transition:height .2s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);background:rgba(168,85,247,0.08)}
+.nav-link.active::before{height:60%}
+.nav-link .dot{width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .2s}
+.nav-link.active .dot{background:var(--accent)}
+.sidebar-footer{margin-top:auto;padding:16px 22px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);font-family:var(--font-code)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);min-height:100vh;padding:0 0 80px}
+
+/* HERO */
+.hero{position:relative;padding:70px 60px 56px;border-bottom:1px solid var(--border);overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:500px;height:500px;background:radial-gradient(circle,rgba(168,85,247,0.1) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-60px;left:30%;width:400px;height:300px;background:radial-gradient(circle,rgba(0,212,170,0.05) 0%,transparent 70%);pointer-events:none}
+.hero-breadcrumb{font-family:var(--font-code);font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.hero-breadcrumb span{color:var(--accent2)}
+.hero h2{font-family:var(--font-head);font-size:clamp(32px,4vw,52px);font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px}
+.hero h2 .hl{color:var(--accent)}
+.hero-desc{font-size:15px;color:var(--muted);max-width:560px;margin-bottom:30px;line-height:1.65}
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column}
+.stat-val{font-family:var(--font-head);font-size:22px;font-weight:800;color:#fff}
+.stat-label{font-size:11px;color:var(--muted);font-family:var(--font-code)}
+
+/* CONTENT */
+.content{padding:40px 60px;max-width:960px}
+.section{margin-bottom:64px;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.section-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.icon-purple{background:rgba(168,85,247,0.12)}
+.icon-blue{background:rgba(61,122,255,0.12)}
+.icon-green{background:rgba(0,212,170,0.12)}
+.icon-red{background:rgba(255,107,107,0.12)}
+.icon-amber{background:rgba(245,158,11,0.12)}
+.section-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.section-subtitle{font-size:12px;color:var(--muted);font-family:var(--font-code);margin-top:2px}
+.section-divider{width:100%;height:1px;background:var(--border);margin:48px 0;position:relative}
+.section-divider::before{content:'';position:absolute;left:0;top:0;width:60px;height:1px;background:var(--accent)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;transition:border-color .2s,transform .2s;position:relative}
+.card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.card.glow-purple:hover{border-color:rgba(168,85,247,0.4);box-shadow:0 0 24px rgba(168,85,247,0.06)}
+.card.glow-green:hover{border-color:rgba(0,212,170,0.4);box-shadow:0 0 24px rgba(0,212,170,0.06)}
+.card.glow-blue:hover{border-color:rgba(61,122,255,0.4);box-shadow:0 0 24px rgba(61,122,255,0.06)}
+.card.glow-amber:hover{border-color:rgba(245,158,11,0.4);box-shadow:0 0 24px rgba(245,158,11,0.06)}
+.card-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* BADGES */
+.badge{font-family:var(--font-code);font-size:9px;padding:2px 8px;border-radius:20px;font-weight:400;display:inline-block}
+.badge-purple{background:rgba(168,85,247,0.15);color:var(--accent)}
+.badge-green{background:rgba(0,212,170,0.15);color:var(--accent2)}
+.badge-blue{background:rgba(61,122,255,0.15);color:var(--accent5)}
+.badge-red{background:rgba(255,107,107,0.15);color:var(--accent3)}
+.badge-amber{background:rgba(245,158,11,0.15);color:var(--accent4)}
+
+/* CODE */
+.code-block{background:#0d1117;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.code-lang{font-family:var(--font-code);font-size:10px;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase}
+.code-title{font-family:var(--font-code);font-size:11px;color:var(--muted)}
+.copy-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-family:var(--font-code);font-size:10px;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.copied{border-color:var(--accent2);color:var(--accent2)}
+pre{padding:20px;overflow-x:auto;font-family:var(--font-code);font-size:13px;line-height:1.75;color:#cdd6f4}
+.kw{color:#89b4fa}.tp{color:#89dceb}.fn{color:#a6e3a1}.cn{color:#fab387}.cm{color:#585b70;font-style:italic}.st{color:#a6e3a1}.op{color:#cba6f7}
+
+/* CALLOUT */
+.callout{border-radius:var(--radius);padding:16px 20px;display:flex;gap:14px;align-items:flex-start;margin:16px 0;font-size:14px;line-height:1.65}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout-purple{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2)}
+.callout-blue{background:rgba(61,122,255,0.08);border:1px solid rgba(61,122,255,0.2)}
+.callout-green{background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2)}
+.callout-amber{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)}
+.callout-red{background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2)}
+
+/* PATTERN CARD */
+.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;transition:border-color .2s}
+.pattern-card:hover{border-color:var(--border2)}
+.pattern-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;user-select:none;transition:background .2s}
+.pattern-header:hover{background:rgba(255,255,255,.02)}
+.pattern-header-left{display:flex;align-items:center;gap:12px}
+.pattern-num{font-family:var(--font-code);font-size:10px;color:var(--muted);background:var(--surface2);padding:3px 9px;border-radius:4px;min-width:36px;text-align:center}
+.pattern-name{font-family:var(--font-head);font-size:15px;font-weight:700;color:#fff}
+.pattern-toggle{font-size:18px;color:var(--muted);transition:transform .25s}
+.pattern-toggle.open{transform:rotate(90deg)}
+.pattern-body{display:none;padding:0 20px 20px;border-top:1px solid var(--border)}
+.pattern-body.open{display:block}
+.p-desc{font-size:14px;color:var(--muted);margin-bottom:14px;line-height:1.65}
+
+/* TABLE */
+.table-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead{background:var(--surface2)}
+th{padding:12px 18px;text-align:left;font-family:var(--font-code);font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:500;border-bottom:1px solid var(--border)}
+td{padding:11px 18px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tc-good{color:var(--accent2);font-family:var(--font-code);font-size:13px}
+.tc-ok{color:var(--accent4);font-family:var(--font-code);font-size:13px}
+.tc-bad{color:var(--accent3);font-family:var(--font-code);font-size:13px}
+.tc-label{font-family:var(--font-code);font-size:12px}
+.tc-note{color:var(--muted);font-size:12px}
+
+/* TIPS/MISTAKES */
+.tip-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.tip-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;transition:border-color .2s}
+.tip-list li:hover{border-color:var(--border2)}
+.mistake-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.mistake-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text);background:rgba(255,107,107,.04);border:1px solid rgba(255,107,107,.12);border-radius:8px;padding:12px 16px;transition:border-color .2s}
+.mistake-list li:hover{border-color:rgba(255,107,107,.3)}
+.list-icon{font-size:16px;margin-top:1px;flex-shrink:0}
+
+/* CHEAT SHEET */
+.cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cheat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:border-color .2s}
+.cheat-card:hover{border-color:var(--border2)}
+.cheat-card-title{font-family:var(--font-code);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.dot-purple{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.dot-green{width:6px;height:6px;border-radius:50%;background:var(--accent2);flex-shrink:0}
+.dot-amber{width:6px;height:6px;border-radius:50%;background:var(--accent4);flex-shrink:0}
+.dot-red{width:6px;height:6px;border-radius:50%;background:var(--accent3);flex-shrink:0}
+.cheat-items{display:flex;flex-direction:column;gap:6px}
+.cheat-item{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.cheat-item-key{color:var(--muted)}
+.cheat-item-val{font-family:var(--font-code);font-size:12px;color:var(--text)}
+.cheat-item-val.green{color:var(--accent2)}
+.cheat-item-val.amber{color:var(--accent4)}
+.cheat-item-val.red{color:var(--accent3)}
+.cheat-item-val.purple{color:var(--accent)}
+
+/* VISUAL DIAGRAMS */
+.diagram-wrap{background:#0d1117;border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin:16px 0;overflow-x:auto}
+.diagram-title{font-family:var(--font-code);font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px}
+
+/* STEP FLOW */
+.step-flow{display:flex;flex-direction:column;gap:0}
+.step-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.step-box{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 14px;font-family:var(--font-code);font-size:12px;color:var(--text);white-space:nowrap;min-width:180px}
+.step-box.highlight{border-color:var(--accent);background:rgba(168,85,247,0.1);color:var(--accent)}
+.step-box.base{border-color:var(--accent2);background:rgba(0,212,170,0.1);color:var(--accent2)}
+.step-box.return{border-color:var(--accent4);background:rgba(245,158,11,0.1);color:var(--accent4)}
+.step-arrow{color:var(--muted);font-size:16px;flex-shrink:0}
+.step-label{font-size:12px;color:var(--muted);font-family:var(--font-code)}
+
+/* TREE DIAGRAM */
+.tree{display:flex;flex-direction:column;align-items:center;gap:0;font-family:var(--font-code);font-size:12px}
+.tree-level{display:flex;gap:20px;align-items:center;justify-content:center;position:relative;padding:4px 0}
+.tree-node{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;color:var(--text);white-space:nowrap;position:relative}
+.tree-node.root{border-color:var(--accent);color:var(--accent);background:rgba(168,85,247,0.1)}
+.tree-node.leaf{border-color:var(--accent2);color:var(--accent2);background:rgba(0,212,170,0.1)}
+.tree-node.dup{border-color:var(--accent3);color:var(--accent3);background:rgba(255,107,107,0.1)}
+.tree-connector{color:var(--muted);text-align:center;font-size:11px;line-height:1}
+
+/* STACK DIAGRAM */
+.stack-diagram{display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap}
+.stack-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.stack-col-label{font-family:var(--font-code);font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px}
+.stack-frame{border-radius:6px;padding:8px 18px;font-family:var(--font-code);font-size:12px;text-align:center;min-width:130px;border:1px solid}
+.frame-active{background:rgba(168,85,247,0.12);border-color:var(--accent);color:var(--accent)}
+.frame-waiting{background:var(--surface2);border-color:var(--border2);color:var(--muted)}
+.frame-base{background:rgba(0,212,170,0.1);border-color:var(--accent2);color:var(--accent2)}
+.frame-return{background:rgba(245,158,11,0.1);border-color:var(--accent4);color:var(--accent4)}
+.stack-arrow{font-size:18px;color:var(--muted);text-align:center}
+
+/* PROB TABLE */
+.prob-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.prob-table thead{background:var(--surface2)}
+.prob-table th{padding:12px 16px;text-align:left;font-family:var(--font-code);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.prob-table td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.prob-table tr:last-child td{border-bottom:none}
+.prob-table tr:hover td{background:rgba(255,255,255,.02)}
+.diff-easy{color:var(--accent2);font-family:var(--font-code);font-size:11px}
+.diff-med{color:var(--accent4);font-family:var(--font-code);font-size:11px}
+.diff-hard{color:var(--accent3);font-family:var(--font-code);font-size:11px}
+.prob-name{color:#fff;font-weight:500}
+.prob-name small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px}
+
+/* MOBILE */
+.mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 18px;z-index:200;gap:14px}
+.menu-btn{background:none;border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.topbar-title{font-family:var(--font-head);font-weight:700;font-size:15px;color:#fff}
+
+#progress-bar{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:999;transition:width .1s linear}
+
+p{margin-bottom:12px;color:var(--text);font-size:14.5px}
+p:last-child{margin-bottom:0}
+code{font-family:var(--font-code);font-size:12px;background:var(--surface2);color:var(--accent2);padding:1px 6px;border-radius:4px;border:1px solid var(--border)}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .28s ease}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding-top:52px}
+  .mobile-topbar{display:flex}
+  .hero{padding:36px 24px 30px}
+  .content{padding:28px 24px}
+  .grid-2,.grid-3,.cheat-grid{grid-template-columns:1fr}
+  .stack-diagram{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div class="mobile-topbar">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <span class="topbar-title">DSA <span style="color:var(--accent)">C++</span></span>
+</div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-tag">revision kit v1.0</span>
+    <h1>DSA <span>C++</span><br>Revision</h1>
+  </div>
+
+  <div class="sidebar-section-label">Topics</div>
+  <div class="sidebar-topic">
+    <a href="index.html" style="text-decoration:none;width:100%">
+      <button class="sidebar-topic-btn" style="width:100%">
+        <span>📦</span> Arrays <span class="topic-badge blue">Done</span>
+      </button>
+    </a>
+  </div>
+  <div class="sidebar-topic">
+    <a href="strings.html" style="text-decoration:none;width:100%">
+      <button class="sidebar-topic-btn" style="width:100%">
+        <span>🔤</span> Strings <span class="topic-badge green">New</span>
+      </button>
+    </a>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn active">
+      <span>🔁</span> Recursion <span class="topic-badge">Active</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span>🔗</span> Linked List <span class="topic-badge" style="background:rgba(107,122,153,.15);color:var(--muted)">Soon</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span>🌲</span> Trees <span class="topic-badge" style="background:rgba(107,122,153,.15);color:var(--muted)">Soon</span>
+    </button>
+  </div>
+  <div class="sidebar-topic">
+    <button class="sidebar-topic-btn soon">
+      <span>🕸️</span> Graphs <span class="topic-badge" style="background:rgba(107,122,153,.15);color:var(--muted)">Soon</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section-label" style="margin-top:10px">Recursion Sections</div>
+  <div class="sidebar-nav">
+    <a class="nav-link active" href="#overview"><span class="dot"></span>Overview</a>
+    <a class="nav-link" href="#base-case"><span class="dot"></span>Base Case</a>
+    <a class="nav-link" href="#rec-tree"><span class="dot"></span>Recursion Tree</a>
+    <a class="nav-link" href="#stack-memory"><span class="dot"></span>Stack & Memory</a>
+    <a class="nav-link" href="#types"><span class="dot"></span>Types of Recursion</a>
+    <a class="nav-link" href="#vs-iteration"><span class="dot"></span>Recursion vs Iteration</a>
+    <a class="nav-link" href="#patterns"><span class="dot"></span>Patterns</a>
+    <a class="nav-link" href="#problems"><span class="dot"></span>Problems</a>
+    <a class="nav-link" href="#backtracking"><span class="dot"></span>Backtracking</a>
+    <a class="nav-link" href="#complexity"><span class="dot"></span>Complexity</a>
+    <a class="nav-link" href="#optimization"><span class="dot"></span>Optimization</a>
+    <a class="nav-link" href="#mistakes"><span class="dot"></span>Common Mistakes</a>
+    <a class="nav-link" href="#cheatsheet"><span class="dot"></span>Cheat Sheet</a>
+  </div>
+  <div class="sidebar-footer">Built for placement prep · 2025</div>
+</nav>
+
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero" id="overview">
+    <div class="hero-breadcrumb">DSA C++ Revision <span>→</span> Recursion</div>
+    <h2>Recursion — <span class="hl">Think in Subproblems</span></h2>
+    <p class="hero-desc">A function that calls itself with a smaller input until it hits a base case. The backbone of trees, graphs, DP, and backtracking. Master this and unlock 70% of hard problems.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-val" style="color:var(--accent)">∞→1</span><span class="stat-label">Reduce & Conquer</span></div>
+      <div class="stat"><span class="stat-val" style="color:var(--accent2)">7</span><span class="stat-label">Patterns</span></div>
+      <div class="stat"><span class="stat-val" style="color:var(--accent3)">20+</span><span class="stat-label">Problems</span></div>
+      <div class="stat"><span class="stat-val" style="color:var(--accent4)">O(2ⁿ)</span><span class="stat-label">Worst Case</span></div>
+    </div>
+  </section>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section class="section" id="overview2">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🧠</div>
+        <div>
+          <div class="section-title">What is Recursion?</div>
+          <div class="section-subtitle">A function that solves a problem by solving smaller versions of itself</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card glow-purple">
+          <div class="card-title">The Core Idea</div>
+          <p>Recursion is when a function calls <strong style="color:#fff">itself</strong> with a smaller or simpler input, trusting that the smaller problem is already solved — until it hits the simplest case (base case).</p>
+          <div class="callout callout-purple" style="margin-top:12px">
+            <span class="callout-icon">💡</span>
+            <span>Real-life analogy: To find your place in a queue, ask the person in front — they ask the person in front of them — until the first person says "I am #1". Then answers flow back.</span>
+          </div>
+        </div>
+        <div class="card glow-green">
+          <div class="card-title">Two Mandatory Parts</div>
+          <p style="margin-bottom:10px"><strong style="color:var(--accent2)">1. Base Case</strong> — The stopping condition. Without this, recursion runs forever (stack overflow).</p>
+          <p><strong style="color:var(--accent)">2. Recursive Case</strong> — Calls itself with a <em>smaller</em> input, making progress toward base case.</p>
+          <div class="callout callout-amber" style="margin-top:12px">
+            <span class="callout-icon">⚠️</span>
+            <span>Every recursion MUST move closer to the base case with each call. Otherwise → infinite recursion.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C++</span>
+          <span class="code-title">Factorial — Classic First Example</span>
+          <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+        </div>
+        <pre><span class="cm">// factorial(n) = n × factorial(n-1)</span>
+<span class="cm">// factorial(0) = 1  ← base case</span>
+
+<span class="tp">int</span> <span class="fn">factorial</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">1</span>;      <span class="cm">// ← BASE CASE (must exist!)</span>
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="cn">1</span>); <span class="cm">// ← RECURSIVE CASE</span>
+}
+
+<span class="cm">// factorial(4) expands as:</span>
+<span class="cm">// 4 × factorial(3)</span>
+<span class="cm">// 4 × 3 × factorial(2)</span>
+<span class="cm">// 4 × 3 × 2 × factorial(1)</span>
+<span class="cm">// 4 × 3 × 2 × 1 × factorial(0) → 1</span>
+<span class="cm">// = 24  (answer unwinds back up)</span></pre>
+      </div>
+
+      <!-- FACTORIAL EXPANSION DIAGRAM -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">factorial(4) — Step-by-Step Expansion</div>
+        <div class="step-flow">
+          <div class="step-row">
+            <div class="step-box highlight">factorial(4)</div>
+            <span class="step-arrow">→</span>
+            <span class="step-label">calls factorial(3), waits...</span>
+          </div>
+          <div class="step-row" style="margin-left:30px">
+            <div class="step-box highlight">factorial(3)</div>
+            <span class="step-arrow">→</span>
+            <span class="step-label">calls factorial(2), waits...</span>
+          </div>
+          <div class="step-row" style="margin-left:60px">
+            <div class="step-box highlight">factorial(2)</div>
+            <span class="step-arrow">→</span>
+            <span class="step-label">calls factorial(1), waits...</span>
+          </div>
+          <div class="step-row" style="margin-left:90px">
+            <div class="step-box highlight">factorial(1)</div>
+            <span class="step-arrow">→</span>
+            <span class="step-label">calls factorial(0), waits...</span>
+          </div>
+          <div class="step-row" style="margin-left:120px">
+            <div class="step-box base">factorial(0) = 1</div>
+            <span class="step-arrow">←</span>
+            <span class="step-label">BASE CASE hit! Returns 1</span>
+          </div>
+          <div class="step-row" style="margin-left:90px">
+            <div class="step-box return">factorial(1) = 1×1 = 1</div>
+            <span class="step-arrow">←</span>
+            <span class="step-label">Unwinds upward</span>
+          </div>
+          <div class="step-row" style="margin-left:60px">
+            <div class="step-box return">factorial(2) = 2×1 = 2</div>
+            <span class="step-arrow">←</span>
+            <span class="step-label"></span>
+          </div>
+          <div class="step-row" style="margin-left:30px">
+            <div class="step-box return">factorial(3) = 3×2 = 6</div>
+            <span class="step-arrow">←</span>
+            <span class="step-label"></span>
+          </div>
+          <div class="step-row">
+            <div class="step-box return">factorial(4) = 4×6 = 24 ✓</div>
+            <span class="step-arrow"></span>
+            <span class="step-label">Final answer</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- BASE CASE -->
+    <section class="section" id="base-case">
+      <div class="section-header">
+        <div class="section-icon icon-green">🛑</div>
+        <div>
+          <div class="section-title">Base Case & Recursive Case</div>
+          <div class="section-subtitle">The two pillars — get these wrong and nothing works</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card glow-green">
+          <div class="card-title">Base Case Rules</div>
+          <ul class="tip-list" style="margin-top:8px">
+            <li><span class="list-icon">✅</span><span>Must exist in <strong style="color:#fff">every</strong> recursive function</span></li>
+            <li><span class="list-icon">✅</span><span>Must be reachable from every call chain</span></li>
+            <li><span class="list-icon">✅</span><span>Returns a concrete value (no more recursion)</span></li>
+            <li><span class="list-icon">✅</span><span>Usually handles n=0, n=1, empty array, or null</span></li>
+          </ul>
+        </div>
+        <div class="card glow-red">
+          <div class="card-title">What Happens Without It</div>
+          <div class="callout callout-red">
+            <span class="callout-icon">💥</span>
+            <span>Stack Overflow! Each call occupies memory on the call stack. Without a base case, the stack fills up and crashes with <code>Segmentation Fault</code>.</span>
+          </div>
+          <div class="code-block" style="margin-top:10px">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Infinite Recursion</span></div>
+            <pre><span class="cm">// ❌ NO BASE CASE — crashes!</span>
+<span class="tp">int</span> <span class="fn">bad</span>(<span class="tp">int</span> n) {
+    <span class="kw">return</span> n * <span class="fn">bad</span>(n - <span class="cn">1</span>); <span class="cm">// runs forever</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C++</span>
+          <span class="code-title">Fibonacci — Multiple Base Cases</span>
+          <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+        </div>
+        <pre><span class="cm">// fib(0) = 0, fib(1) = 1  ← TWO base cases</span>
+<span class="cm">// fib(n) = fib(n-1) + fib(n-2)</span>
+
+<span class="tp">int</span> <span class="fn">fib</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">0</span>;   <span class="cm">// base case 1</span>
+    <span class="kw">if</span> (n == <span class="cn">1</span>) <span class="kw">return</span> <span class="cn">1</span>;   <span class="cm">// base case 2</span>
+    <span class="kw">return</span> <span class="fn">fib</span>(n-<span class="cn">1</span>) + <span class="fn">fib</span>(n-<span class="cn">2</span>); <span class="cm">// recursive case</span>
+}
+
+<span class="cm">// Sum of first N numbers</span>
+<span class="tp">int</span> <span class="fn">sumN</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="kw">return</span> n + <span class="fn">sumN</span>(n - <span class="cn">1</span>);
+}
+
+<span class="cm">// Power: a^b</span>
+<span class="tp">int</span> <span class="fn">power</span>(<span class="tp">int</span> a, <span class="tp">int</span> b) {
+    <span class="kw">if</span> (b == <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">1</span>;        <span class="cm">// anything^0 = 1</span>
+    <span class="kw">if</span> (b % <span class="cn">2</span> == <span class="cn">0</span>)
+        <span class="kw">return</span> <span class="fn">power</span>(a*a, b/<span class="cn">2</span>);  <span class="cm">// fast power O(log b)</span>
+    <span class="kw">return</span> a * <span class="fn">power</span>(a, b-<span class="cn">1</span>);
+}</pre>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- RECURSION TREE -->
+    <section class="section" id="rec-tree">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🌳</div>
+        <div>
+          <div class="section-title">Recursion Tree Visualization</div>
+          <div class="section-subtitle">See how calls expand — this is how you calculate complexity</div>
+        </div>
+      </div>
+
+      <p>Every recursive call spawns more calls — forming a tree. The <strong style="color:#fff">depth</strong> of the tree = space complexity. The <strong style="color:#fff">total nodes</strong> = time complexity.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">fib(5) — Recursion Tree (notice repeated subproblems)</div>
+        <div class="tree">
+          <div class="tree-level">
+            <div class="tree-node root">fib(5)</div>
+          </div>
+          <div class="tree-connector">┌────────────────┘────────────────┐</div>
+          <div class="tree-level">
+            <div class="tree-node">fib(4)</div>
+            <div style="width:60px"></div>
+            <div class="tree-node dup">fib(3) ⚠</div>
+          </div>
+          <div class="tree-connector" style="display:flex;gap:80px;justify-content:center">
+            <span>┌──────┘──────┐</span>
+            <span>┌────┘────┐</span>
+          </div>
+          <div class="tree-level">
+            <div class="tree-node">fib(3)</div>
+            <div style="width:10px"></div>
+            <div class="tree-node dup">fib(2) ⚠</div>
+            <div style="width:10px"></div>
+            <div class="tree-node dup">fib(2) ⚠</div>
+            <div style="width:10px"></div>
+            <div class="tree-node leaf">fib(1)=1</div>
+          </div>
+          <div class="tree-connector" style="display:flex;gap:20px;justify-content:center">
+            <span>┌──┘──┐</span>
+          </div>
+          <div class="tree-level">
+            <div class="tree-node dup">fib(2) ⚠</div>
+            <div style="width:10px"></div>
+            <div class="tree-node leaf">fib(1)=1</div>
+          </div>
+          <div class="tree-connector">┌┘┐</div>
+          <div class="tree-level">
+            <div class="tree-node leaf">fib(1)=1</div>
+            <div style="width:6px"></div>
+            <div class="tree-node leaf">fib(0)=0</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap">
+          <span class="badge badge-red">⚠ fib(3) computed 2×</span>
+          <span class="badge badge-red">⚠ fib(2) computed 3×</span>
+          <span class="badge badge-amber">Total calls: 2ⁿ — exponential!</span>
+          <span class="badge badge-green">Fix: Memoization → O(n)</span>
+        </div>
+      </div>
+
+      <div class="callout callout-purple" style="margin-top:4px">
+        <span class="callout-icon">🎯</span>
+        <span><strong style="color:#fff">Key insight:</strong> When you see overlapping subproblems in a recursion tree → that's a signal to use <strong style="color:var(--accent2)">memoization (DP)</strong>. The recursion tree IS how you discover DP solutions.</span>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- STACK MEMORY -->
+    <section class="section" id="stack-memory">
+      <div class="section-header">
+        <div class="section-icon icon-amber">📚</div>
+        <div>
+          <div class="section-title">Stack Frame & Memory</div>
+          <div class="section-subtitle">What actually happens inside RAM when recursion runs</div>
+        </div>
+      </div>
+
+      <p>Every function call creates a <strong style="color:#fff">stack frame</strong> on the call stack — storing local variables, parameters, and the return address. Frames are pushed on call and popped on return.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">Call Stack for factorial(4) — Push Phase → Pop Phase</div>
+        <div class="stack-diagram">
+          <div class="stack-col">
+            <div class="stack-col-label">PUSH (building up)</div>
+            <div class="stack-frame frame-active">factorial(4) n=4</div>
+            <div class="stack-frame frame-waiting">factorial(3) n=3</div>
+            <div class="stack-frame frame-waiting">factorial(2) n=2</div>
+            <div class="stack-frame frame-waiting">factorial(1) n=1</div>
+            <div class="stack-frame frame-base">factorial(0) → 1</div>
+            <div style="text-align:center;font-family:var(--font-code);font-size:11px;color:var(--muted);margin-top:6px">↑ Stack grows downward</div>
+          </div>
+          <div style="display:flex;align-items:center;font-size:28px;color:var(--muted);padding:20px">→</div>
+          <div class="stack-col">
+            <div class="stack-col-label">POP (unwinding)</div>
+            <div class="stack-frame frame-return">factorial(4) = 4×6 = 24</div>
+            <div class="stack-frame frame-return">factorial(3) = 3×2 = 6</div>
+            <div class="stack-frame frame-return">factorial(2) = 2×1 = 2</div>
+            <div class="stack-frame frame-return">factorial(1) = 1×1 = 1</div>
+            <div class="stack-frame frame-base">factorial(0) = 1 ← starts here</div>
+            <div style="text-align:center;font-family:var(--font-code);font-size:11px;color:var(--accent4);margin-top:6px">↑ Returns flow upward</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card glow-amber">
+          <div class="card-title">Stack Frame Contains</div>
+          <ul class="tip-list" style="margin-top:8px">
+            <li><span class="list-icon">📌</span><span><strong style="color:#fff">Parameters</strong> — values passed to the function</span></li>
+            <li><span class="list-icon">📌</span><span><strong style="color:#fff">Local variables</strong> — declared inside the function</span></li>
+            <li><span class="list-icon">📌</span><span><strong style="color:#fff">Return address</strong> — where to go after returning</span></li>
+            <li><span class="list-icon">📌</span><span><strong style="color:#fff">Return value</strong> — result passed back to caller</span></li>
+          </ul>
+        </div>
+        <div class="card glow-red">
+          <div class="card-title">Stack Overflow</div>
+          <p>Default stack size is ~1-8 MB. Each frame uses memory. For n=100,000, factorial() creates 100,000 frames → stack overflow.</p>
+          <div class="callout callout-red" style="margin-top:10px">
+            <span class="callout-icon">⚠️</span>
+            <span>In competitive programming: if n &gt; 10⁵ and you use plain recursion → likely TLE or MLE. Use iteration or increase stack size.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- TYPES -->
+    <section class="section" id="types">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🔀</div>
+        <div>
+          <div class="section-title">Types of Recursion</div>
+          <div class="section-subtitle">Know the difference — it affects optimization and behavior</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="card glow-blue">
+          <div class="card-title">Tail Recursion <span class="badge badge-green">Optimizable</span></div>
+          <p style="font-size:13px;color:var(--muted)">Recursive call is the <strong style="color:#fff">last operation</strong>. No work happens after the call returns. Compiler can optimize to a loop (tail call optimization).</p>
+          <div class="code-block" style="margin-top:10px">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Tail Recursion</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="cm">// Work done BEFORE recursive call</span>
+<span class="tp">void</span> <span class="fn">printN</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span>;
+    cout &lt;&lt; n &lt;&lt; <span class="st">" "</span>;    <span class="cm">// work first</span>
+    <span class="fn">printN</span>(n - <span class="cn">1</span>);        <span class="cm">// then call</span>
+}
+<span class="cm">// Prints: 5 4 3 2 1</span>
+
+<span class="cm">// Tail recursive factorial (accumulator)</span>
+<span class="tp">int</span> <span class="fn">factTail</span>(<span class="tp">int</span> n, <span class="tp">int</span> acc = <span class="cn">1</span>) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span> acc;
+    <span class="kw">return</span> <span class="fn">factTail</span>(n-<span class="cn">1</span>, n*acc); <span class="cm">// call is last</span>
+}</pre>
+          </div>
+        </div>
+        <div class="card glow-purple">
+          <div class="card-title">Head Recursion <span class="badge badge-purple">Work after call</span></div>
+          <p style="font-size:13px;color:var(--muted)">Recursive call happens <strong style="color:#fff">first</strong>, work is done on the way <strong style="color:#fff">back up</strong> (during unwinding). Cannot be tail-call optimized.</p>
+          <div class="code-block" style="margin-top:10px">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Head Recursion</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="cm">// Call first, THEN work</span>
+<span class="tp">void</span> <span class="fn">printReverse</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span>;
+    <span class="fn">printReverse</span>(n - <span class="cn">1</span>);  <span class="cm">// call first</span>
+    cout &lt;&lt; n &lt;&lt; <span class="st">" "</span>;     <span class="cm">// work after</span>
+}
+<span class="cm">// Prints: 1 2 3 4 5</span>
+<span class="cm">// Same code as printN but reversed!</span>
+<span class="cm">// The call order flips the output.</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card glow-amber">
+          <div class="card-title">Tree Recursion <span class="badge badge-amber">Multiple calls</span></div>
+          <p style="font-size:13px;color:var(--muted)">Makes <strong style="color:#fff">more than one</strong> recursive call per function. Creates a tree of calls. Classic: Fibonacci.</p>
+          <div class="code-block" style="margin-top:10px">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Tree Recursion</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">int</span> <span class="fn">fib</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="kw">return</span> <span class="fn">fib</span>(n-<span class="cn">1</span>) + <span class="fn">fib</span>(n-<span class="cn">2</span>);
+    <span class="cm">// TWO calls → tree of calls</span>
+    <span class="cm">// Time: O(2ⁿ) without memo</span>
+}</pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Indirect Recursion <span class="badge badge-blue">A→B→A</span></div>
+          <p style="font-size:13px;color:var(--muted)">Function A calls function B, which calls A again. Rare in interviews but good to know.</p>
+          <div class="code-block" style="margin-top:10px">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Indirect Recursion</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">void</span> <span class="fn">funcB</span>(<span class="tp">int</span> n); <span class="cm">// forward declare</span>
+
+<span class="tp">void</span> <span class="fn">funcA</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">0</span>) <span class="kw">return</span>;
+    cout &lt;&lt; <span class="st">"A:"</span> &lt;&lt; n &lt;&lt; <span class="st">" "</span>;
+    <span class="fn">funcB</span>(n - <span class="cn">1</span>);  <span class="cm">// A calls B</span>
+}
+<span class="tp">void</span> <span class="fn">funcB</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">0</span>) <span class="kw">return</span>;
+    cout &lt;&lt; <span class="st">"B:"</span> &lt;&lt; n &lt;&lt; <span class="st">" "</span>;
+    <span class="fn">funcA</span>(n - <span class="cn">1</span>);  <span class="cm">// B calls A</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- VS ITERATION -->
+    <section class="section" id="vs-iteration">
+      <div class="section-header">
+        <div class="section-icon icon-green">⚖️</div>
+        <div>
+          <div class="section-title">Recursion vs Iteration</div>
+          <div class="section-subtitle">Know when to use which — interviewers love this question</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:16px">
+        <table>
+          <thead>
+            <tr><th>Aspect</th><th>Recursion</th><th>Iteration</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="tc-label">Code clarity</td><td class="tc-good">Cleaner for tree/graph problems</td><td class="tc-note">Better for simple loops</td></tr>
+            <tr><td class="tc-label">Memory</td><td class="tc-bad">O(n) stack frames</td><td class="tc-good">O(1) extra space</td></tr>
+            <tr><td class="tc-label">Speed</td><td class="tc-ok">Slight overhead (function calls)</td><td class="tc-good">Faster (no call overhead)</td></tr>
+            <tr><td class="tc-label">Stack overflow risk</td><td class="tc-bad">Yes — deep recursion crashes</td><td class="tc-good">None</td></tr>
+            <tr><td class="tc-label">Expressiveness</td><td class="tc-good">Natural for divide & conquer</td><td class="tc-ok">Harder for tree traversal</td></tr>
+            <tr><td class="tc-label">Debugging</td><td class="tc-bad">Harder — call stack is deep</td><td class="tc-good">Easier to trace</td></tr>
+            <tr><td class="tc-label">Use when</td><td>Trees, graphs, backtracking, D&C</td><td>Arrays, simple loops, O(1) space needed</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C++</span>
+          <span class="code-title">Same Problem — Two Approaches</span>
+          <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+        </div>
+        <pre><span class="cm">// Sum 1 to N — Recursive (O(n) space)</span>
+<span class="tp">int</span> <span class="fn">sumRec</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="kw">return</span> n + <span class="fn">sumRec</span>(n - <span class="cn">1</span>);
+}
+
+<span class="cm">// Sum 1 to N — Iterative (O(1) space)</span>
+<span class="tp">int</span> <span class="fn">sumIter</span>(<span class="tp">int</span> n) {
+    <span class="tp">int</span> total = <span class="cn">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="cn">1</span>; i &lt;= n; i++) total += i;
+    <span class="kw">return</span> total;
+}
+
+<span class="cm">// Sum 1 to N — Math formula (O(1) time+space)</span>
+<span class="tp">int</span> <span class="fn">sumMath</span>(<span class="tp">int</span> n) { <span class="kw">return</span> n * (n + <span class="cn">1</span>) / <span class="cn">2</span>; }</pre>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- PATTERNS -->
+    <section class="section" id="patterns">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔷</div>
+        <div>
+          <div class="section-title">Recursion Patterns</div>
+          <div class="section-subtitle">7 patterns that cover 90% of recursive problems</div>
+        </div>
+      </div>
+
+      <!-- P1: Linear -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">01</span>
+            <span class="pattern-name">Linear Recursion</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-green">One call per step</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Makes exactly one recursive call per invocation. Simplest form. Used for: traversal, counting, sum, reverse.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Linear Recursion Examples</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="cm">// Reverse an array using recursion</span>
+<span class="tp">void</span> <span class="fn">reverseArr</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> l, <span class="tp">int</span> r) {
+    <span class="kw">if</span> (l &gt;= r) <span class="kw">return</span>;
+    <span class="fn">swap</span>(a[l], a[r]);
+    <span class="fn">reverseArr</span>(a, l + <span class="cn">1</span>, r - <span class="cn">1</span>);
+}
+
+<span class="cm">// Check palindrome recursively</span>
+<span class="tp">bool</span> <span class="fn">isPalin</span>(<span class="tp">string</span>&amp; s, <span class="tp">int</span> l, <span class="tp">int</span> r) {
+    <span class="kw">if</span> (l &gt;= r) <span class="kw">return</span> <span class="kw">true</span>;
+    <span class="kw">if</span> (s[l] != s[r]) <span class="kw">return</span> <span class="kw">false</span>;
+    <span class="kw">return</span> <span class="fn">isPalin</span>(s, l+<span class="cn">1</span>, r-<span class="cn">1</span>);
+}
+
+<span class="cm">// Count digits in a number</span>
+<span class="tp">int</span> <span class="fn">countDigits</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n == <span class="cn">0</span>) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="kw">return</span> <span class="cn">1</span> + <span class="fn">countDigits</span>(n / <span class="cn">10</span>);
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P2: Divide & Conquer -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">02</span>
+            <span class="pattern-name">Divide & Conquer</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-blue">Split → Solve → Merge</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Split problem into independent halves, solve each recursively, merge results. Examples: Merge Sort, Binary Search, Quick Sort.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Merge Sort — Classic D&C</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">void</span> <span class="fn">merge</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> l, <span class="tp">int</span> m, <span class="tp">int</span> r) {
+    <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; tmp;
+    <span class="tp">int</span> i = l, j = m + <span class="cn">1</span>;
+    <span class="kw">while</span> (i &lt;= m &amp;&amp; j &lt;= r)
+        tmp.<span class="fn">push_back</span>(a[i] &lt;= a[j] ? a[i++] : a[j++]);
+    <span class="kw">while</span> (i &lt;= m) tmp.<span class="fn">push_back</span>(a[i++]);
+    <span class="kw">while</span> (j &lt;= r) tmp.<span class="fn">push_back</span>(a[j++]);
+    <span class="kw">for</span> (<span class="tp">int</span> k = l; k &lt;= r; k++) a[k] = tmp[k-l];
+}
+
+<span class="tp">void</span> <span class="fn">mergeSort</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> l, <span class="tp">int</span> r) {
+    <span class="kw">if</span> (l &gt;= r) <span class="kw">return</span>;           <span class="cm">// base case</span>
+    <span class="tp">int</span> m = l + (r - l) / <span class="cn">2</span>;
+    <span class="fn">mergeSort</span>(a, l, m);            <span class="cm">// left half</span>
+    <span class="fn">mergeSort</span>(a, m+<span class="cn">1</span>, r);         <span class="cm">// right half</span>
+    <span class="fn">merge</span>(a, l, m, r);             <span class="cm">// combine</span>
+}
+<span class="cm">// Time: O(n log n) | Space: O(n)</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P3: Pick Not Pick -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">03</span>
+            <span class="pattern-name">Pick / Not Pick Pattern</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-purple">Subsets & Combinations</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">At each index, make a binary choice: <strong style="color:#fff">include</strong> the element OR <strong style="color:#fff">exclude</strong> it. Generates all subsets. Foundation of many backtracking problems.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Generate All Subsets</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">void</span> <span class="fn">subsets</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; nums, <span class="tp">int</span> idx,
+             <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; cur, <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&gt;&amp; res) {
+    <span class="kw">if</span> (idx == nums.<span class="fn">size</span>()) {
+        res.<span class="fn">push_back</span>(cur);  <span class="cm">// base: record subset</span>
+        <span class="kw">return</span>;
+    }
+    <span class="cm">// PICK nums[idx]</span>
+    cur.<span class="fn">push_back</span>(nums[idx]);
+    <span class="fn">subsets</span>(nums, idx + <span class="cn">1</span>, cur, res);
+
+    <span class="cm">// NOT PICK nums[idx] (backtrack)</span>
+    cur.<span class="fn">pop_back</span>();
+    <span class="fn">subsets</span>(nums, idx + <span class="cn">1</span>, cur, res);
+}
+<span class="cm">// For [1,2,3] generates 2³ = 8 subsets</span>
+<span class="cm">// [], [3], [2], [2,3], [1], [1,3], [1,2], [1,2,3]</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P4: Backtracking -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">04</span>
+            <span class="pattern-name">Backtracking</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-red">Choose→Explore→Undo</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Try a choice, recurse deeper, then <strong style="color:#fff">undo</strong> the choice (backtrack) to try alternatives. Used when you need all valid solutions.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Permutations — Classic Backtracking</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">void</span> <span class="fn">permute</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; nums, <span class="tp">int</span> start,
+             <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&gt;&amp; res) {
+    <span class="kw">if</span> (start == nums.<span class="fn">size</span>()) {
+        res.<span class="fn">push_back</span>(nums); <span class="kw">return</span>;
+    }
+    <span class="kw">for</span> (<span class="tp">int</span> i = start; i &lt; (<span class="tp">int</span>)nums.<span class="fn">size</span>(); i++) {
+        <span class="fn">swap</span>(nums[start], nums[i]);   <span class="cm">// CHOOSE</span>
+        <span class="fn">permute</span>(nums, start+<span class="cn">1</span>, res);  <span class="cm">// EXPLORE</span>
+        <span class="fn">swap</span>(nums[start], nums[i]);   <span class="cm">// UNDO (backtrack)</span>
+    }
+}
+
+<span class="cm">// Combination Sum — pick same element multiple times</span>
+<span class="tp">void</span> <span class="fn">combSum</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; cands, <span class="tp">int</span> target, <span class="tp">int</span> idx,
+             <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; cur, <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&gt;&amp; res) {
+    <span class="kw">if</span> (target == <span class="cn">0</span>) { res.<span class="fn">push_back</span>(cur); <span class="kw">return</span>; }
+    <span class="kw">if</span> (idx == cands.<span class="fn">size</span>() || target &lt; <span class="cn">0</span>) <span class="kw">return</span>;
+    cur.<span class="fn">push_back</span>(cands[idx]);
+    <span class="fn">combSum</span>(cands, target-cands[idx], idx, cur, res); <span class="cm">// reuse</span>
+    cur.<span class="fn">pop_back</span>();
+    <span class="fn">combSum</span>(cands, target, idx+<span class="cn">1</span>, cur, res);          <span class="cm">// skip</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P5: DFS-style -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">05</span>
+            <span class="pattern-name">DFS-style Recursion</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-green">Tree & Graph traversal</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Recursively visit all children/neighbors. Foundation of tree traversals (inorder, preorder, postorder) and graph DFS.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Binary Tree Traversals</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="kw">struct</span> <span class="tp">Node</span> { <span class="tp">int</span> val; <span class="tp">Node</span>*left, *right; };
+
+<span class="tp">void</span> <span class="fn">inorder</span>(<span class="tp">Node</span>* root) {        <span class="cm">// Left Root Right</span>
+    <span class="kw">if</span> (!root) <span class="kw">return</span>;
+    <span class="fn">inorder</span>(root-&gt;left);
+    cout &lt;&lt; root-&gt;val &lt;&lt; <span class="st">" "</span>;
+    <span class="fn">inorder</span>(root-&gt;right);
+}
+
+<span class="tp">void</span> <span class="fn">preorder</span>(<span class="tp">Node</span>* root) {       <span class="cm">// Root Left Right</span>
+    <span class="kw">if</span> (!root) <span class="kw">return</span>;
+    cout &lt;&lt; root-&gt;val &lt;&lt; <span class="st">" "</span>;
+    <span class="fn">preorder</span>(root-&gt;left);
+    <span class="fn">preorder</span>(root-&gt;right);
+}
+
+<span class="tp">int</span> <span class="fn">height</span>(<span class="tp">Node</span>* root) {           <span class="cm">// DFS to find depth</span>
+    <span class="kw">if</span> (!root) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="kw">return</span> <span class="cn">1</span> + <span class="fn">max</span>(<span class="fn">height</span>(root-&gt;left), <span class="fn">height</span>(root-&gt;right));
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P6: Recursion on Index -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">06</span>
+            <span class="pattern-name">Recursion on Index</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-amber">Array traversal</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Process array/string by advancing the index recursively. Replaces loops with recursive index movement.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Array Sum + String Reverse</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="cm">// Sum array elements recursively</span>
+<span class="tp">int</span> <span class="fn">arrSum</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> i) {
+    <span class="kw">if</span> (i == a.<span class="fn">size</span>()) <span class="kw">return</span> <span class="cn">0</span>;
+    <span class="kw">return</span> a[i] + <span class="fn">arrSum</span>(a, i + <span class="cn">1</span>);
+}
+
+<span class="cm">// Reverse a string</span>
+<span class="tp">string</span> <span class="fn">revStr</span>(<span class="tp">string</span> s, <span class="tp">int</span> i) {
+    <span class="kw">if</span> (i == s.<span class="fn">size</span>()) <span class="kw">return</span> <span class="st">""</span>;
+    <span class="kw">return</span> <span class="fn">revStr</span>(s, i+<span class="cn">1</span>) + s[i]; <span class="cm">// head recursion!</span>
+}
+
+<span class="cm">// Find max in array</span>
+<span class="tp">int</span> <span class="fn">arrMax</span>(<span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; a, <span class="tp">int</span> i) {
+    <span class="kw">if</span> (i == (<span class="tp">int</span>)a.<span class="fn">size</span>() - <span class="cn">1</span>) <span class="kw">return</span> a[i];
+    <span class="kw">return</span> <span class="fn">max</span>(a[i], <span class="fn">arrMax</span>(a, i + <span class="cn">1</span>));
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- P7: Memoization -->
+      <div class="pattern-card">
+        <div class="pattern-header" onclick="togglePattern(this)">
+          <div class="pattern-header-left">
+            <span class="pattern-num">07</span>
+            <span class="pattern-name">Memoized Recursion (Top-Down DP)</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-green">O(n) from O(2ⁿ)</span>
+            <span class="pattern-toggle">›</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="p-desc">Cache results of recursive calls. If a subproblem is seen again, return cached value instead of recomputing. Converts exponential to polynomial.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-title">Fibonacci with Memoization — O(n)</span><button class="copy-btn" onclick="copyCode(this)">⎘ copy</button></div>
+            <pre><span class="tp">unordered_map</span>&lt;<span class="tp">int</span>,<span class="tp">int</span>&gt; memo;
+
+<span class="tp">int</span> <span class="fn">fib</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="kw">if</span> (memo.<span class="fn">count</span>(n)) <span class="kw">return</span> memo[n]; <span class="cm">// cache hit!</span>
+    memo[n] = <span class="fn">fib</span>(n-<span class="cn">1</span>) + <span class="fn">fib</span>(n-<span class="cn">2</span>);   <span class="cm">// store result</span>
+    <span class="kw">return</span> memo[n];
+}
+<span class="cm">// Time: O(n) | Space: O(n) — huge improvement!</span>
+
+<span class="cm">// Cleaner with vector</span>
+<span class="tp">int</span> <span class="fn">fibMemo</span>(<span class="tp">int</span> n, <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; dp) {
+    <span class="kw">if</span> (n &lt;= <span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="kw">if</span> (dp[n] != -<span class="cn">1</span>) <span class="kw">return</span> dp[n];
+    <span class="kw">return</span> dp[n] = <span class="fn">fibMemo</span>(n-<span class="cn">1</span>,dp) + <span class="fn">fibMemo</span>(n-<span class="cn">2</span>,dp);
+}
+<span class="cm">// Call: vector&lt;int&gt; dp(n+1,-1); fibMemo(n, dp);</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- PROBLEMS -->
+    <section class="section" id="problems">
+      <div class="section-header">
+        <div class="section-icon icon-red">🎯</div>
+        <div>
+          <div class="section-title">Must-Solve Problems</div>
+          <div class="section-subtitle">Solve in this order — basics first, then advanced</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="prob-table">
+          <thead>
+            <tr><th>#</th><th>Problem</th><th>Pattern</th><th>Difficulty</th><th>Key Idea</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="tc-label">1</td><td><span class="prob-name">Print 1 to N</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Linear / Tail</td><td class="diff-easy">Easy</td><td class="tc-note">Base: n=0, print then recurse or recurse then print</td></tr>
+            <tr><td class="tc-label">2</td><td><span class="prob-name">Factorial</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Linear</td><td class="diff-easy">Easy</td><td class="tc-note">n * factorial(n-1)</td></tr>
+            <tr><td class="tc-label">3</td><td><span class="prob-name">Fibonacci</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Tree</td><td class="diff-easy">Easy</td><td class="tc-note">Two base cases: fib(0)=0, fib(1)=1</td></tr>
+            <tr><td class="tc-label">4</td><td><span class="prob-name">Power (a^b)</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">D&C</td><td class="diff-easy">Easy</td><td class="tc-note">b even: power(a²,b/2); odd: a×power(a,b-1)</td></tr>
+            <tr><td class="tc-label">5</td><td><span class="prob-name">Reverse Array</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Two Pointer Rec</td><td class="diff-easy">Easy</td><td class="tc-note">swap(a[l],a[r]), recurse(l+1,r-1)</td></tr>
+            <tr><td class="tc-label">6</td><td><span class="prob-name">Check Palindrome</span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Linear</td><td class="diff-easy">Easy</td><td class="tc-note">s[l]==s[r] && isPalin(l+1,r-1)</td></tr>
+            <tr><td class="tc-label">7</td><td><span class="prob-name">Subsets / Power Set<small>LeetCode 78</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Pick/Not Pick</td><td class="diff-med">Medium</td><td class="tc-note">2 choices per element: include or skip</td></tr>
+            <tr><td class="tc-label">8</td><td><span class="prob-name">Permutations<small>LeetCode 46</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Backtracking</td><td class="diff-med">Medium</td><td class="tc-note">swap→recurse→swap back</td></tr>
+            <tr><td class="tc-label">9</td><td><span class="prob-name">Combination Sum<small>LeetCode 39</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Backtracking</td><td class="diff-med">Medium</td><td class="tc-note">Can reuse elements; skip when target&lt;0</td></tr>
+            <tr><td class="tc-label">10</td><td><span class="prob-name">Letter Combinations<small>LeetCode 17</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Backtracking</td><td class="diff-med">Medium</td><td class="tc-note">Phone pad mapping, recurse each digit</td></tr>
+            <tr><td class="tc-label">11</td><td><span class="prob-name">Word Search<small>LeetCode 79</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">DFS + Backtrack</td><td class="diff-med">Medium</td><td class="tc-note">Mark visited, explore 4 dirs, unmark</td></tr>
+            <tr><td class="tc-label">12</td><td><span class="prob-name">N-Queens<small>LeetCode 51</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Backtracking</td><td class="diff-hard">Hard</td><td class="tc-note">Place queen row by row, check validity</td></tr>
+            <tr><td class="tc-label">13</td><td><span class="prob-name">Sudoku Solver<small>LeetCode 37</small></span></td><td style="font-family:var(--font-code);font-size:11px;color:var(--muted)">Backtracking</td><td class="diff-hard">Hard</td><td class="tc-note">Try 1-9 in each empty cell, backtrack on fail</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- BACKTRACKING DEEP DIVE -->
+    <section class="section" id="backtracking">
+      <div class="section-header">
+        <div class="section-icon icon-red">↩️</div>
+        <div>
+          <div class="section-title">Backtracking Deep Dive</div>
+          <div class="section-subtitle">The most powerful recursion technique for interviews</div>
+        </div>
+      </div>
+
+      <div class="callout callout-purple">
+        <span class="callout-icon">🎯</span>
+        <span><strong style="color:#fff">Backtracking = Recursion + Undo.</strong> Try a choice → if it leads to a solution, keep it → if not, undo it and try the next choice. Explores all possibilities efficiently by pruning dead-end branches.</span>
+      </div>
+
+      <div class="diagram-wrap" style="margin-top:16px">
+        <div class="diagram-title">Decision Tree for Subsets of [1,2] — Pick/Not Pick</div>
+        <div class="tree">
+          <div class="tree-level">
+            <div class="tree-node root">start [ ]</div>
+          </div>
+          <div class="tree-connector">┌──────────────────────┘──────────────────────┐</div>
+          <div class="tree-level">
+            <div class="tree-node">pick 1 → [1]</div>
+            <div style="width:40px"></div>
+            <div class="tree-node">skip 1 → [ ]</div>
+          </div>
+          <div class="tree-connector" style="display:flex;gap:60px;justify-content:center">
+            <span>┌────┘────┐</span>
+            <span>┌────┘────┐</span>
+          </div>
+          <div class="tree-level">
+            <div class="tree-node leaf">[1,2] ✓</div>
+            <div style="width:6px"></div>
+            <div class="tree-node leaf">[1] ✓</div>
+            <div style="width:6px"></div>
+            <div class="tree-node leaf">[2] ✓</div>
+            <div style="width:6px"></div>
+            <div class="tree-node leaf">[ ] ✓</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-family:var(--font-code);font-size:11px;color:var(--muted)">
+          Every leaf = one valid subset. 2 elements → 2² = 4 subsets. n elements → 2ⁿ subsets.
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top:16px">
+        <div class="code-header">
+          <span class="code-lang">C++</span>
+          <span class="code-title">N-Queens — Full Backtracking Template</span>
+          <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+        </div>
+        <pre><span class="kw">class</span> <span class="tp">Solution</span> {
+    <span class="tp">bool</span> <span class="fn">isSafe</span>(<span class="tp">vector</span>&lt;<span class="tp">string</span>&gt;&amp; board, <span class="tp">int</span> r, <span class="tp">int</span> c, <span class="tp">int</span> n) {
+        <span class="kw">for</span> (<span class="tp">int</span> i = r-<span class="cn">1</span>; i &gt;= <span class="cn">0</span>; i--)
+            <span class="kw">if</span> (board[i][c] == <span class="st">'Q'</span>) <span class="kw">return</span> <span class="kw">false</span>;       <span class="cm">// col</span>
+        <span class="kw">for</span> (<span class="tp">int</span> i=r-<span class="cn">1</span>, j=c-<span class="cn">1</span>; i&gt;=<span class="cn">0</span>&amp;&amp;j&gt;=<span class="cn">0</span>; i--,j--)
+            <span class="kw">if</span> (board[i][j] == <span class="st">'Q'</span>) <span class="kw">return</span> <span class="kw">false</span>;       <span class="cm">// diag left</span>
+        <span class="kw">for</span> (<span class="tp">int</span> i=r-<span class="cn">1</span>, j=c+<span class="cn">1</span>; i&gt;=<span class="cn">0</span>&amp;&amp;j&lt;n; i--,j++)
+            <span class="kw">if</span> (board[i][j] == <span class="st">'Q'</span>) <span class="kw">return</span> <span class="kw">false</span>;       <span class="cm">// diag right</span>
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+    <span class="tp">void</span> <span class="fn">solve</span>(<span class="tp">int</span> row, <span class="tp">int</span> n, <span class="tp">vector</span>&lt;<span class="tp">string</span>&gt;&amp; board,
+               <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">string</span>&gt;&gt;&amp; res) {
+        <span class="kw">if</span> (row == n) { res.<span class="fn">push_back</span>(board); <span class="kw">return</span>; }
+        <span class="kw">for</span> (<span class="tp">int</span> col = <span class="cn">0</span>; col &lt; n; col++) {
+            <span class="kw">if</span> (<span class="fn">isSafe</span>(board, row, col, n)) {
+                board[row][col] = <span class="st">'Q'</span>;           <span class="cm">// CHOOSE</span>
+                <span class="fn">solve</span>(row + <span class="cn">1</span>, n, board, res);   <span class="cm">// EXPLORE</span>
+                board[row][col] = <span class="st">'.'</span>;           <span class="cm">// UNDO</span>
+            }
+        }
+    }
+<span class="kw">public</span>:
+    <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">string</span>&gt;&gt; <span class="fn">solveNQueens</span>(<span class="tp">int</span> n) {
+        <span class="tp">vector</span>&lt;<span class="tp">string</span>&gt; board(n, <span class="tp">string</span>(n, <span class="st">'.'</span>));
+        <span class="tp">vector</span>&lt;<span class="tp">vector</span>&lt;<span class="tp">string</span>&gt;&gt; res;
+        <span class="fn">solve</span>(<span class="cn">0</span>, n, board, res);
+        <span class="kw">return</span> res;
+    }
+};</pre>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- COMPLEXITY -->
+    <section class="section" id="complexity">
+      <div class="section-header">
+        <div class="section-icon icon-amber">⏱️</div>
+        <div>
+          <div class="section-title">Time & Space Complexity</div>
+          <div class="section-subtitle">How to analyze recursive complexity — the recursion tree method</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:16px">
+        <table>
+          <thead>
+            <tr><th>Algorithm</th><th>Time</th><th>Space (Stack)</th><th>Reason</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="tc-label">Factorial(n)</td><td class="tc-good">O(n)</td><td class="tc-ok">O(n)</td><td class="tc-note">n linear calls</td></tr>
+            <tr><td class="tc-label">Fibonacci(n) — no memo</td><td class="tc-bad">O(2ⁿ)</td><td class="tc-ok">O(n)</td><td class="tc-note">2 calls per node, depth n</td></tr>
+            <tr><td class="tc-label">Fibonacci(n) — with memo</td><td class="tc-good">O(n)</td><td class="tc-ok">O(n)</td><td class="tc-note">Each subproblem solved once</td></tr>
+            <tr><td class="tc-label">Merge Sort</td><td class="tc-ok">O(n log n)</td><td class="tc-ok">O(n)</td><td class="tc-note">log n levels × n work per level</td></tr>
+            <tr><td class="tc-label">Binary Search</td><td class="tc-good">O(log n)</td><td class="tc-good">O(log n)</td><td class="tc-note">Halves each time</td></tr>
+            <tr><td class="tc-label">Subsets</td><td class="tc-bad">O(2ⁿ)</td><td class="tc-ok">O(n)</td><td class="tc-note">2 choices per element</td></tr>
+            <tr><td class="tc-label">Permutations</td><td class="tc-bad">O(n!)</td><td class="tc-ok">O(n)</td><td class="tc-note">n choices × (n-1) × ... × 1</td></tr>
+            <tr><td class="tc-label">Power(a,b) fast</td><td class="tc-good">O(log b)</td><td class="tc-good">O(log b)</td><td class="tc-note">Halves exponent each call</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-amber">
+        <span class="callout-icon">📐</span>
+        <div>
+          <strong style="color:#fff">Recursion Tree Method:</strong><br>
+          Time = (number of nodes in recursion tree) × (work per node)<br>
+          Space = depth of recursion tree (max stack frames at one time)
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- OPTIMIZATION -->
+    <section class="section" id="optimization">
+      <div class="section-header">
+        <div class="section-icon icon-green">⚡</div>
+        <div>
+          <div class="section-title">Optimization Techniques</div>
+          <div class="section-subtitle">From exponential to polynomial — the DP gateway</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card glow-green">
+          <div class="card-title">Memoization (Top-Down)</div>
+          <p>Cache the result of each unique subproblem. On re-encountering it, return cached value. Keeps the recursive structure but eliminates repeated work.</p>
+          <div class="callout callout-green" style="margin-top:10px">
+            <span class="callout-icon">✅</span>
+            <span>Best when: recursive structure is natural and not all subproblems are needed.</span>
+          </div>
+        </div>
+        <div class="card glow-blue">
+          <div class="card-title">Tabulation (Bottom-Up)</div>
+          <p>Convert recursion to iteration. Fill a DP table from base cases upward. No function call overhead, no stack risk.</p>
+          <div class="callout callout-blue" style="margin-top:10px">
+            <span class="callout-icon">✅</span>
+            <span>Best when: all subproblems must be solved and you need O(1) space (space optimization possible).</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top:14px">
+        <div class="code-header">
+          <span class="code-lang">C++</span>
+          <span class="code-title">Fibonacci: Recursive → Memo → Tabulation → O(1) Space</span>
+          <button class="copy-btn" onclick="copyCode(this)">⎘ copy</button>
+        </div>
+        <pre><span class="cm">// 1. Plain recursion — O(2ⁿ)</span>
+<span class="tp">int</span> <span class="fn">fib1</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span>(n&lt;=<span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="kw">return</span> <span class="fn">fib1</span>(n-<span class="cn">1</span>) + <span class="fn">fib1</span>(n-<span class="cn">2</span>);
+}
+
+<span class="cm">// 2. Memoization — O(n) time, O(n) space</span>
+<span class="tp">int</span> <span class="fn">fib2</span>(<span class="tp">int</span> n, <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt;&amp; dp) {
+    <span class="kw">if</span>(n&lt;=<span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="kw">if</span>(dp[n]!=-<span class="cn">1</span>) <span class="kw">return</span> dp[n];
+    <span class="kw">return</span> dp[n] = <span class="fn">fib2</span>(n-<span class="cn">1</span>,dp) + <span class="fn">fib2</span>(n-<span class="cn">2</span>,dp);
+}
+
+<span class="cm">// 3. Tabulation — O(n) time, O(n) space, no recursion</span>
+<span class="tp">int</span> <span class="fn">fib3</span>(<span class="tp">int</span> n) {
+    <span class="tp">vector</span>&lt;<span class="tp">int</span>&gt; dp(n+<span class="cn">1</span>); dp[<span class="cn">0</span>]=<span class="cn">0</span>; dp[<span class="cn">1</span>]=<span class="cn">1</span>;
+    <span class="kw">for</span>(<span class="tp">int</span> i=<span class="cn">2</span>;i&lt;=n;i++) dp[i]=dp[i-<span class="cn">1</span>]+dp[i-<span class="cn">2</span>];
+    <span class="kw">return</span> dp[n];
+}
+
+<span class="cm">// 4. Space optimized — O(n) time, O(1) space</span>
+<span class="tp">int</span> <span class="fn">fib4</span>(<span class="tp">int</span> n) {
+    <span class="kw">if</span>(n&lt;=<span class="cn">1</span>) <span class="kw">return</span> n;
+    <span class="tp">int</span> a=<span class="cn">0</span>, b=<span class="cn">1</span>;
+    <span class="kw">for</span>(<span class="tp">int</span> i=<span class="cn">2</span>;i&lt;=n;i++) { <span class="tp">int</span> c=a+b; a=b; b=c; }
+    <span class="kw">return</span> b;
+}</pre>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- MISTAKES -->
+    <section class="section" id="mistakes">
+      <div class="section-header">
+        <div class="section-icon icon-red">⚠️</div>
+        <div>
+          <div class="section-title">Common Mistakes</div>
+          <div class="section-subtitle">Every beginner makes these — don't be one of them</div>
+        </div>
+      </div>
+
+      <ul class="mistake-list">
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Missing base case.</strong> The #1 mistake. Always ask: "What is the smallest input where I know the answer directly?" That's your base case. Missing it = infinite recursion = crash.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Not making progress toward base case.</strong> If <code>n</code> never decreases (or increases toward the base), recursion runs forever. Every call must get strictly closer to the base case.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Wrong return in backtracking.</strong> Forgetting to <code>pop_back()</code> after recursion in backtracking problems. The undo step is critical — without it, you carry stale data into the next branch.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Not using the return value.</strong> Writing <code>recurse(n-1);</code> instead of <code>return recurse(n-1);</code> — the computed value is lost. If your function returns something, use <code>return</code>.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Recomputing subproblems.</strong> Plain Fibonacci is O(2ⁿ) because it recomputes fib(3) many times. If you see overlapping subproblems in your recursion tree → add memoization immediately.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Stack overflow on large inputs.</strong> If n &gt; 10⁵ and you use plain recursion, expect stack overflow. Switch to iterative or increase stack size with <code>#pragma comment(linker, "/STACK:1000000000")</code>.</span></li>
+        <li><span class="list-icon">🚫</span><span><strong style="color:#fff">Global state mutation without cleanup.</strong> Using global/static variables in recursion without resetting between branches leads to wrong answers in backtracking. Prefer passing state as parameters.</span></li>
+      </ul>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- CHEAT SHEET -->
+    <section class="section" id="cheatsheet">
+      <div class="section-header">
+        <div class="section-icon icon-amber">⚡</div>
+        <div>
+          <div class="section-title">Quick Revision Cheat Sheet</div>
+          <div class="section-subtitle">Last-minute review before your interview</div>
+        </div>
+      </div>
+
+      <div class="cheat-grid">
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot-purple"></span>Pattern → Use When</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Print/traverse</span><span class="cheat-item-val purple">Linear Recursion</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">All subsets</span><span class="cheat-item-val purple">Pick / Not Pick</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">All permutations</span><span class="cheat-item-val purple">Backtracking</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Sort / search</span><span class="cheat-item-val purple">Divide & Conquer</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Tree/graph</span><span class="cheat-item-val purple">DFS Recursion</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Overlapping subproblems</span><span class="cheat-item-val purple">Memoization</span></div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot-green"></span>Complexity Quick Ref</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">Factorial / linear</span><span class="cheat-item-val green">O(n) time, O(n) space</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Fibonacci (plain)</span><span class="cheat-item-val red">O(2ⁿ)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Fibonacci (memo)</span><span class="cheat-item-val green">O(n)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Merge Sort</span><span class="cheat-item-val amber">O(n log n)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Subsets</span><span class="cheat-item-val red">O(2ⁿ)</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Permutations</span><span class="cheat-item-val red">O(n!)</span></div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot-amber"></span>Backtracking Template</div>
+          <div style="font-family:var(--font-code);font-size:12px;color:var(--muted);line-height:1.8;margin-top:4px">
+            <div style="color:var(--accent2)">void solve(state) {</div>
+            <div style="margin-left:12px;color:var(--accent4)">if (base) { save; return; }</div>
+            <div style="margin-left:12px;color:var(--text)">for each choice:</div>
+            <div style="margin-left:24px;color:var(--accent2)">make choice    // CHOOSE</div>
+            <div style="margin-left:24px;color:var(--accent)">solve(next)    // EXPLORE</div>
+            <div style="margin-left:24px;color:var(--accent3)">undo choice    // UNDO</div>
+            <div style="color:var(--accent2)">}</div>
+          </div>
+        </div>
+
+        <div class="cheat-card">
+          <div class="cheat-card-title"><span class="dot-red"></span>Red Flags in Recursion</div>
+          <div class="cheat-items">
+            <div class="cheat-item"><span class="cheat-item-key">No base case</span><span class="cheat-item-val red">Stack overflow</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">n not decreasing</span><span class="cheat-item-val red">Infinite loop</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Missing return</span><span class="cheat-item-val red">Wrong answer</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">No pop_back</span><span class="cheat-item-val red">Stale backtrack state</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">n &gt; 10⁵</span><span class="cheat-item-val amber">Use iteration</span></div>
+            <div class="cheat-item"><span class="cheat-item-key">Repeated subproblems</span><span class="cheat-item-val amber">Add memo!</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-green" style="margin-top:20px">
+        <span class="callout-icon">🚀</span>
+        <div><strong style="color:#fff">Next: </strong>Linked List → Stack & Queue → Trees → Graphs → Dynamic Programming</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
+menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+document.addEventListener('click', e => {
+  if (window.innerWidth <= 900 && !sidebar.contains(e.target) && e.target !== menuBtn)
+    sidebar.classList.remove('open');
+});
+
+function togglePattern(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.pattern-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓ copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ copy'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section, .hero');
+function updateActiveNav() {
+  const scrollY = window.scrollY + 100;
+  let current = '';
+  sections.forEach(sec => { if (sec.offsetTop <= scrollY) current = sec.id; });
+  navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + current));
+}
+
+const bar = document.getElementById('progress-bar');
+function updateProgress() {
+  const doc = document.documentElement;
+  const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+  bar.style.width = pct + '%';
+}
+
+window.addEventListener('scroll', () => { updateActiveNav(); updateProgress(); }, { passive: true });
+updateActiveNav();
+
+navLinks.forEach(link => {
+  link.addEventListener('click', () => { if (window.innerWidth <= 900) sidebar.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
