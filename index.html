@@ -983,20 +983,6 @@ p:last-child { margin-bottom: 0; }
   </button>
 </div>
  
-  <div class="sidebar-section-label" style="margin-top:10px">Arrays Sections</div>
-
-  <div class="sidebar-nav">
-    <a class="nav-link active" href="#overview">        <span class="dot"></span>Overview</a>
-    <a class="nav-link" href="#concepts">               <span class="dot"></span>Core Concepts</a>
-    <a class="nav-link" href="#complexity">             <span class="dot"></span>Complexity</a>
-    <a class="nav-link" href="#patterns">               <span class="dot"></span>Patterns</a>
-    <a class="nav-link" href="#stl">                    <span class="dot"></span>STL Toolkit</a>
-    <a class="nav-link" href="#problems">               <span class="dot"></span>Problems</a>
-    <a class="nav-link" href="#interview-tips">         <span class="dot"></span>Interview Tips</a>
-    <a class="nav-link" href="#mistakes">               <span class="dot"></span>Common Mistakes</a>
-    <a class="nav-link" href="#cheatsheet">             <span class="dot"></span>Cheat Sheet</a>
-  </div>
-
   <div class="sidebar-footer">
     Built for placement prep · 2025
   </div>
@@ -2047,21 +2033,6 @@ function copyCode(btn) {
 /* ═══════════════════════════════════════════
    ACTIVE NAV HIGHLIGHT
 ═══════════════════════════════════════════ */
-const navLinks = document.querySelectorAll('.nav-link');
-const sections = document.querySelectorAll('.section, .hero');
-
-function updateActiveNav() {
-  const scrollY = window.scrollY + 100;
-  let current = '';
-
-  sections.forEach(sec => {
-    if (sec.offsetTop <= scrollY) current = sec.id;
-  });
-
-  navLinks.forEach(link => {
-    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
-  });
-}
 
 /* ═══════════════════════════════════════════
    PROGRESS BAR
