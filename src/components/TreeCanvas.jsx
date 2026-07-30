@@ -1,390 +1,481 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { treeData, leafNodes, BRANCH_COLORS } from '../data/treeData';
+import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Html, OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
+import { treeData, leafNodes } from '../data/treeData';
 
-// Polyfill/fallback for rounded rects if missing
-if (CanvasRenderingContext2D && !CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-  };
-}
+/* ═══════════════════════════════════════════
+   CONSTANTS & HELPERS
+═══════════════════════════════════════════ */
 
-const TreeCanvas = ({ onNodeClick, onRootClick, droppedLeaves = [], shockwaveActive, nodePositions }) => {
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const [hoveredNodeId, setHoveredNodeId] = useState(null);
+const COLORS = {
+  linear: new THREE.Color('#3b82f6'),
+  nonlinear: new THREE.Color('#8b5cf6'),
+  algorithms: new THREE.Color('#10b981'),
+  advanced: new THREE.Color('#f59e0b'),
+  root: new THREE.Color('#3b82f6'),
+  trunk: new THREE.Color('#1e3a5f'),
+};
 
-  // Nodes are recomputed on resize
-  const nodesMeta = useRef({
-    root: null,
-    junctions: [],
-    leaves: [],
-    branches: [] // connections
+const HEX = {
+  linear: '#3b82f6',
+  nonlinear: '#8b5cf6',
+  algorithms: '#10b981',
+  advanced: '#f59e0b',
+};
+
+// Build tree layout — root at bottom, branches curve upward
+function buildTreeLayout() {
+  const rootPos = [0, -3.5, 0];
+  const branches = treeData.branches;
+
+  // Spread branches in an arc above the root
+  const branchSpread = 3.2;
+  const branchY = 0.8;
+  const branchPositions = {};
+  const leafPositions = {};
+
+  const totalBranches = branches.length;
+  branches.forEach((branch, i) => {
+    const angle = ((i - (totalBranches - 1) / 2) / totalBranches) * Math.PI * 0.7;
+    const x = Math.sin(angle) * branchSpread;
+    const z = Math.cos(angle) * 0.8 - 0.5;
+    branchPositions[branch.id] = [x, branchY, z];
+
+    // Spread leaves above each branch
+    const leafCount = branch.leaves.length;
+    branch.leaves.forEach((leafId, li) => {
+      const leafAngle = leafCount === 1
+        ? 0
+        : ((li - (leafCount - 1) / 2) / Math.max(leafCount - 1, 1)) * 0.8;
+      const lx = x + Math.sin(angle + leafAngle) * 1.6;
+      const ly = branchY + 2.5 + (li % 2) * 0.6;
+      const lz = z + Math.cos(angle + leafAngle) * 0.4 + (li % 2) * 0.3;
+      leafPositions[leafId] = [lx, ly, lz];
+    });
   });
 
-  // Track time
-  const timeRef = useRef(0);
-  const shockwaveRef = useRef({ active: false, startTime: 0 });
+  return { rootPos, branchPositions, leafPositions };
+}
 
-  useEffect(() => {
-    if (shockwaveActive) {
-      shockwaveRef.current = { active: true, startTime: timeRef.current };
+/* ═══════════════════════════════════════════
+   GLOWING BRANCH (tube geometry along a curve)
+═══════════════════════════════════════════ */
+
+function GlowBranch({ start, end, color, pulseSpeed = 1, shockwave = false }) {
+  const meshRef = useRef();
+  const glowRef = useRef();
+
+  // Create a curved path from start to end
+  const { geometry, glowGeometry } = useMemo(() => {
+    const mid = [
+      (start[0] + end[0]) / 2,
+      (start[1] + end[1]) / 2 + 0.6,
+      (start[2] + end[2]) / 2,
+    ];
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(...start),
+      new THREE.Vector3(...mid),
+      new THREE.Vector3(...end),
+    );
+    return {
+      geometry: new THREE.TubeGeometry(curve, 24, 0.04, 8, false),
+      glowGeometry: new THREE.TubeGeometry(curve, 24, 0.12, 8, false),
+    };
+  }, [start, end]);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const t = state.clock.elapsedTime;
+      meshRef.current.material.emissiveIntensity = 0.6 + Math.sin(t * pulseSpeed) * 0.3;
     }
-  }, [shockwaveActive]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    let animationFrameId;
-    let width = 0;
-    let height = 0;
-    
-    const leafWidth = 120;
-    const leafHeight = 40;
-
-    const setupNodes = () => {
-      // Setup Root
-      const rootPos = { x: width / 2, y: height - 100, radius: 35, id: 'root', type: 'root' };
-      
-      const junctions = [];
-      const leaves = [];
-      const branches = [];
-      
-      const numBranches = treeData.branches.length;
-      
-      // Calculate branch layout
-      // Spread them in an arc
-      treeData.branches.forEach((branch, i) => {
-        // -1.5, -0.5, 0.5, 1.5
-        const offsetMultiplier = i - (numBranches - 1) / 2; 
-        const jx = width / 2 + offsetMultiplier * 250;
-        const jy = height - 350 - Math.abs(offsetMultiplier) * 80;
-        
-        const junction = {
-          x: jx, y: jy, radius: 20, id: branch.id, color: branch.color || '#fff', type: 'junction', label: branch.label
-        };
-        junctions.push(junction);
-        
-        // Add main branch connection
-        branches.push({
-          from: rootPos,
-          to: junction,
-          color: junction.color,
-          isMain: true
-        });
-
-        // Layout leaves for this branch
-        const numLeaves = branch.leaves.length;
-        branch.leaves.forEach((leafId, li) => {
-          const lOffset = li - (numLeaves - 1) / 2;
-          const lx = jx + lOffset * 150;
-          const ly = jy - 150 - Math.abs(lOffset) * 40;
-          
-          const leafData = leafNodes[leafId] || {};
-          const leaf = {
-            x: lx, y: ly, w: leafWidth, h: leafHeight, id: leafId, 
-            color: junction.color, type: 'leaf', label: leafData.label || leafId
-          };
-          leaves.push(leaf);
-          
-          // Add sub-branch connection
-          branches.push({
-            from: junction,
-            to: leaf,
-            color: junction.color,
-            isMain: false
-          });
-        });
-      });
-
-      nodesMeta.current = { root: rootPos, junctions, leaves, branches };
-      
-      if (nodePositions) {
-        nodePositions.current = { root: { x: rootPos.x, y: rootPos.y } };
-        leaves.forEach(l => {
-          nodePositions.current[l.id] = { x: l.x, y: l.y };
-        });
-      }
-    };
-
-    const handleResize = () => {
-      const parent = containerRef.current;
-      if (parent) {
-        width = parent.clientWidth;
-        height = parent.clientHeight;
-        canvas.width = width;
-        canvas.height = height;
-        setupNodes();
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    // Draw functions
-    const drawBranch = (branch, time, swProgress) => {
-      const { from, to, color, isMain } = branch;
-      
-      // Control point for quadratic bezier
-      const cx = isMain ? from.x : from.x + (to.x - from.x) * 0.1;
-      const cy = isMain ? from.y - 150 : to.y + (from.y - to.y) * 0.5;
-
-      // Glow multiplier from shockwave
-      let swMultiplier = 1;
-      if (swProgress > 0 && swProgress < 1) {
-        swMultiplier = 1 + Math.sin(swProgress * Math.PI) * 2;
-      }
-
-      ctx.lineCap = 'round';
-      
-      // Outer glow
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(cx, cy, to.x, to.y);
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.15 * swMultiplier;
-      ctx.lineWidth = 8;
-      ctx.stroke();
-
-      // Mid glow
-      ctx.globalAlpha = 0.3 * swMultiplier;
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      // Inner core
-      ctx.globalAlpha = 0.8 * swMultiplier;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Idle pulse along branch
-      const pulseT = (time * 0.0005 + (isMain ? 0 : 0.5)) % 1;
-      // calc point on bezier
-      const px = (1-pulseT)*(1-pulseT)*from.x + 2*(1-pulseT)*pulseT*cx + pulseT*pulseT*to.x;
-      const py = (1-pulseT)*(1-pulseT)*from.y + 2*(1-pulseT)*pulseT*cy + pulseT*pulseT*to.y;
-      
-      ctx.globalAlpha = 0.8;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(px, py, isMain ? 3 : 2, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.globalAlpha = 1.0;
-    };
-
-    const drawNode = (node, time, swProgress) => {
-      const isHovered = hoveredNodeId === node.id;
-      
-      if (node.type === 'root') {
-        const pulseScale = 1 + Math.sin(time * 0.003) * 0.05;
-        const swScale = 1 + (swProgress > 0 && swProgress < 1 ? Math.sin(swProgress * Math.PI) * 0.2 : 0);
-        const r = node.radius * pulseScale * swScale;
-        
-        const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.3, 'rgba(59, 130, 246, 0.8)');
-        grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
-        
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-        
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Syne';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Core Foundations & STL', node.x, node.y + 50);
-
-        if (isHovered) {
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, r + 5, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-      } else if (node.type === 'junction') {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = node.color;
-        ctx.fill();
-        
-        ctx.fillStyle = '#1e293b'; // dark for contrast if needed, or white
-        ctx.font = '11px DM Sans';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(node.label || '', node.x, node.y - 30);
-      } else if (node.type === 'leaf') {
-        const isDropped = droppedLeaves.includes(node.id);
-        ctx.globalAlpha = isDropped ? 0.2 : 1.0;
-        
-        const w = node.w;
-        const h = node.h;
-        const hx = node.x - w/2;
-        const hy = node.y - h/2;
-
-        if (isHovered && !isDropped) {
-          ctx.shadowColor = node.color;
-          ctx.shadowBlur = 15;
-        }
-
-        ctx.fillStyle = node.color;
-        if (ctx.roundRect) {
-          ctx.roundRect(hx, hy, w, h, 8);
-          ctx.fill();
-        } else {
-          ctx.fillRect(hx, hy, w, h);
-        }
-        
-        ctx.shadowBlur = 0;
-        
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px DM Sans';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.label || node.id, node.x, node.y);
-        ctx.globalAlpha = 1.0;
-
-        if (isHovered && !isDropped) {
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1;
-          if (ctx.roundRect) {
-            ctx.roundRect(hx - 2, hy - 2, w + 4, h + 4, 10);
-            ctx.stroke();
-          }
-        }
-      }
-    };
-
-    const render = (time) => {
-      timeRef.current = time;
-      ctx.clearRect(0, 0, width, height);
-
-      let swProgress = 0;
-      if (shockwaveRef.current.active) {
-        const elapsed = time - shockwaveRef.current.startTime;
-        swProgress = elapsed / 1000; // 1 second duration
-        if (swProgress >= 1) {
-          shockwaveRef.current.active = false;
-          swProgress = 0;
-        }
-      }
-
-      // Draw Shockwave ring
-      if (swProgress > 0) {
-        const root = nodesMeta.current.root;
-        const maxRadius = Math.max(width, height) * 0.8;
-        const ringRadius = maxRadius * swProgress;
-        
-        ctx.beginPath();
-        ctx.arc(root.x, root.y, ringRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - swProgress) * 0.5})`;
-        ctx.lineWidth = 4 * (1 - swProgress);
-        ctx.stroke();
-      }
-
-      // Draw branches
-      nodesMeta.current.branches.forEach(b => drawBranch(b, time, swProgress));
-      
-      // Draw nodes
-      nodesMeta.current.junctions.forEach(n => drawNode(n, time, swProgress));
-      nodesMeta.current.leaves.forEach(n => drawNode(n, time, swProgress));
-      if (nodesMeta.current.root) {
-        drawNode(nodesMeta.current.root, time, swProgress);
-      }
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-    
-    render(0);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [droppedLeaves, hoveredNodeId]); // Re-bind on state change for hover/dropped
-
-  // Interaction handlers
-  const handleMouseMove = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    let hovered = null;
-    const { root, leaves } = nodesMeta.current;
-    
-    if (root) {
-      const dx = x - root.x;
-      const dy = y - root.y;
-      if (dx*dx + dy*dy <= root.radius*root.radius) hovered = root.id;
-    }
-    
-    for (const leaf of leaves) {
-      const lx = leaf.x - leaf.w/2;
-      const ly = leaf.y - leaf.h/2;
-      if (x >= lx && x <= lx + leaf.w && y >= ly && y <= ly + leaf.h) {
-        hovered = leaf.id;
-        break;
+    if (glowRef.current) {
+      const t = state.clock.elapsedTime;
+      glowRef.current.material.opacity = 0.12 + Math.sin(t * pulseSpeed + 0.5) * 0.06;
+      if (shockwave) {
+        glowRef.current.material.opacity = 0.5;
+        glowRef.current.material.emissiveIntensity = 2;
       }
     }
-    
-    if (hovered !== hoveredNodeId) {
-      setHoveredNodeId(hovered);
-    }
-  };
-
-  const handleClick = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const { root, leaves } = nodesMeta.current;
-    
-    if (root) {
-      const dx = x - root.x;
-      const dy = y - root.y;
-      if (dx*dx + dy*dy <= root.radius*root.radius) {
-        if (onRootClick) onRootClick();
-        return;
-      }
-    }
-    
-    for (const leaf of leaves) {
-      const lx = leaf.x - leaf.w/2;
-      const ly = leaf.y - leaf.h/2;
-      if (x >= lx && x <= lx + leaf.w && y >= ly && y <= ly + leaf.h) {
-        if (onNodeClick && !droppedLeaves.includes(leaf.id)) {
-          onNodeClick(leaf.id);
-        }
-        return;
-      }
-    }
-  };
+  });
 
   return (
-    <div ref={containerRef} className="w-full h-full absolute inset-0">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full block"
-        style={{ cursor: hoveredNodeId ? 'pointer' : 'default' }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoveredNodeId(null)}
-        onClick={handleClick}
+    <group>
+      {/* Outer glow */}
+      <mesh ref={glowRef} geometry={glowGeometry}>
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.15}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Core branch */}
+      <mesh ref={meshRef} geometry={geometry}>
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.6}
+          roughness={0.3}
+          metalness={0.5}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ROOT NODE — glowing sphere at the base
+═══════════════════════════════════════════ */
+
+function RootNode({ position, onClick, shockwave }) {
+  const meshRef = useRef();
+  const ringRef = useRef();
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const t = state.clock.elapsedTime;
+      meshRef.current.material.emissiveIntensity = 1.0 + Math.sin(t * 1.5) * 0.4;
+      meshRef.current.scale.setScalar(hovered ? 1.15 : 1.0);
+    }
+    // Shockwave ring
+    if (ringRef.current) {
+      if (shockwave) {
+        ringRef.current.visible = true;
+        ringRef.current.scale.setScalar(ringRef.current.scale.x + 0.08);
+        ringRef.current.material.opacity = Math.max(0, 0.8 - ringRef.current.scale.x * 0.1);
+        if (ringRef.current.scale.x > 8) {
+          ringRef.current.scale.setScalar(0.5);
+        }
+      } else {
+        ringRef.current.visible = false;
+        ringRef.current.scale.setScalar(0.5);
+      }
+    }
+  });
+
+  return (
+    <group position={position}>
+      {/* Main sphere */}
+      <mesh
+        ref={meshRef}
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
+      >
+        <sphereGeometry args={[0.5, 32, 32]} />
+        <meshStandardMaterial
+          color="#1e40af"
+          emissive="#3b82f6"
+          emissiveIntensity={1.0}
+          roughness={0.2}
+          metalness={0.7}
+        />
+      </mesh>
+
+      {/* Shockwave ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+        <ringGeometry args={[0.8, 1.0, 64]} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.6} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+
+      {/* Label */}
+      <Html position={[0, -0.85, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          fontFamily: 'Syne, sans-serif',
+          fontWeight: 700,
+          fontSize: '13px',
+          color: 'white',
+          textShadow: '0 0 15px rgba(59,130,246,0.8)',
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
+          userSelect: 'none',
+        }}>
+          Core Foundations & STL
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   BRANCH JUNCTION NODE
+═══════════════════════════════════════════ */
+
+function BranchNode({ position, color, label }) {
+  const meshRef = useRef();
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const t = state.clock.elapsedTime;
+      meshRef.current.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[0.25, 24, 24]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.5}
+          roughness={0.3}
+          metalness={0.6}
+        />
+      </mesh>
+      <Html position={[0, -0.5, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          fontFamily: 'DM Sans, sans-serif',
+          fontSize: '10px',
+          color: 'rgba(255,255,255,0.7)',
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
+          userSelect: 'none',
+        }}>
+          {label}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   LEAF NODE — interactive badge floating in 3D
+═══════════════════════════════════════════ */
+
+function LeafNode({ position, leafId, color, label, icon, isDropped, onClick }) {
+  const groupRef = useRef();
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      const t = state.clock.elapsedTime;
+      // Gentle floating bob
+      groupRef.current.position.y = position[1] + Math.sin(t * 0.8 + position[0]) * 0.08;
+      // Scale on hover
+      const targetScale = hovered ? 1.2 : 1.0;
+      groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+    }
+  });
+
+  const hexColor = typeof color === 'string' ? color : `#${color.getHexString()}`;
+
+  return (
+    <group ref={groupRef} position={position}>
+      <Html center distanceFactor={8} style={{ pointerEvents: isDropped ? 'none' : 'auto' }}>
+        <div
+          onClick={(e) => { e.stopPropagation(); if (!isDropped) onClick(leafId); }}
+          onMouseEnter={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
+          onMouseLeave={() => { setHovered(false); document.body.style.cursor = 'default'; }}
+          style={{
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            color: 'white',
+            padding: '6px 14px',
+            borderRadius: '10px',
+            background: isDropped
+              ? 'rgba(30,30,40,0.3)'
+              : `linear-gradient(135deg, ${hexColor}33, ${hexColor}11)`,
+            border: `1px solid ${isDropped ? 'rgba(255,255,255,0.05)' : hexColor + '55'}`,
+            boxShadow: isDropped ? 'none' : `0 0 18px ${hexColor}30, 0 0 6px ${hexColor}20`,
+            cursor: isDropped ? 'default' : 'pointer',
+            opacity: isDropped ? 0.25 : 1,
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <span>{icon}</span>
+          {label}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   FLOATING PARTICLES around the tree
+═══════════════════════════════════════════ */
+
+function TreeParticles() {
+  const ref = useRef();
+  const count = 60;
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 12;
+      arr[i * 3 + 1] = Math.random() * 8 - 3;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 6;
+    }
+    return arr;
+  }, []);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const t = state.clock.elapsedTime;
+      const pos = ref.current.geometry.attributes.position;
+      for (let i = 0; i < count; i++) {
+        pos.array[i * 3 + 1] += Math.sin(t * 0.3 + i) * 0.002;
+      }
+      pos.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          array={positions}
+          count={count}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.04}
+        color="#3b82f6"
+        transparent
+        opacity={0.4}
+        sizeAttenuation
+        depthWrite={false}
       />
+    </points>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   SCENE — composes all tree elements
+═══════════════════════════════════════════ */
+
+function TreeScene({ onNodeClick, onRootClick, droppedLeaves, shockwaveActive }) {
+  const layout = useMemo(() => buildTreeLayout(), []);
+
+  return (
+    <>
+      {/* Ambient + directional lighting */}
+      <ambientLight intensity={0.15} />
+      <pointLight position={[0, 5, 3]} intensity={0.8} color="#3b82f6" />
+      <pointLight position={[-3, 2, -2]} intensity={0.4} color="#8b5cf6" />
+      <pointLight position={[3, 2, -2]} intensity={0.3} color="#10b981" />
+
+      {/* Floating particles */}
+      <TreeParticles />
+
+      {/* Root node */}
+      <RootNode
+        position={layout.rootPos}
+        onClick={onRootClick}
+        shockwave={shockwaveActive}
+      />
+
+      {/* Branches and nodes */}
+      {treeData.branches.map((branch) => {
+        const branchPos = layout.branchPositions[branch.id];
+        const color = COLORS[branch.id] || COLORS.root;
+        const hexColor = HEX[branch.id] || '#3b82f6';
+
+        return (
+          <group key={branch.id}>
+            {/* Root → Branch trunk */}
+            <GlowBranch
+              start={layout.rootPos}
+              end={branchPos}
+              color={color}
+              pulseSpeed={1.2}
+              shockwave={shockwaveActive}
+            />
+
+            {/* Branch junction */}
+            <BranchNode
+              position={branchPos}
+              color={color}
+              label={branch.label}
+            />
+
+            {/* Branch → Leaf connections and leaf nodes */}
+            {branch.leaves.map((leafId) => {
+              const leafPos = layout.leafPositions[leafId];
+              const leaf = leafNodes[leafId];
+              if (!leafPos || !leaf) return null;
+
+              return (
+                <group key={leafId}>
+                  <GlowBranch
+                    start={branchPos}
+                    end={leafPos}
+                    color={color}
+                    pulseSpeed={0.8}
+                    shockwave={shockwaveActive}
+                  />
+                  <LeafNode
+                    position={leafPos}
+                    leafId={leafId}
+                    color={hexColor}
+                    label={leaf.label}
+                    icon={leaf.icon}
+                    isDropped={droppedLeaves.includes(leafId)}
+                    onClick={(id) => {
+                      // Get screen-space position for modal animation origin
+                      onNodeClick(id);
+                    }}
+                  />
+                </group>
+              );
+            })}
+          </group>
+        );
+      })}
+
+      {/* Orbit controls — gentle zoom/rotate */}
+      <OrbitControls
+        enablePan={false}
+        minDistance={5}
+        maxDistance={18}
+        minPolarAngle={Math.PI * 0.2}
+        maxPolarAngle={Math.PI * 0.65}
+        autoRotate
+        autoRotateSpeed={0.3}
+        enableDamping
+        dampingFactor={0.05}
+      />
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   TREE CANVAS — Wrapper with R3F Canvas
+═══════════════════════════════════════════ */
+
+const TreeCanvas = ({ onNodeClick, onRootClick, droppedLeaves = [], shockwaveActive, nodePositions }) => {
+  const handleNodeClick = useCallback((nodeId) => {
+    // Pass rough center-screen coords since 3D → 2D projection is complex
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+    onNodeClick(nodeId, x, y);
+  }, [onNodeClick]);
+
+  return (
+    <div className="w-full h-full" style={{ position: 'absolute', inset: 0 }}>
+      <Canvas
+        camera={{ position: [0, 1, 10], fov: 50 }}
+        style={{ background: 'transparent' }}
+        gl={{ antialias: true, alpha: true }}
+        dpr={[1, 2]}
+      >
+        <TreeScene
+          onNodeClick={handleNodeClick}
+          onRootClick={onRootClick}
+          droppedLeaves={droppedLeaves}
+          shockwaveActive={shockwaveActive}
+        />
+      </Canvas>
     </div>
   );
 };
